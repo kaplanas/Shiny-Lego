@@ -158,7 +158,6 @@ shinyServer(function(input, output) {
     } else if(length(input$demographicsThemePicker) > 0) {
       numeric.width = wrap_dims(length(input$demographicsThemePicker))[2] * 300
     }
-    print(paste("width:", numeric.width))
     return(paste(numeric.width, "px", sep = ""))
   })
   demographics.plot.height = reactive({
@@ -172,7 +171,6 @@ shinyServer(function(input, output) {
     } else if(length(input$demographicsThemePicker) > 0) {
       numeric.height = wrap_dims(length(input$demographicsThemePicker))[1] * 300
     }
-    print(paste("height:", numeric.height))
     return(paste(numeric.height, "px", sep = ""))
   })
   output$demographicsPlotUI <- renderUI({
@@ -225,10 +223,6 @@ shinyServer(function(input, output) {
       style = style,
       p(HTML(as.character(point$part.name)))
     )
-  })
-  
-  output$demographicsGuide = renderText({
-    "Blah blah blah."
   })
   
 })

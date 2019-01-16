@@ -95,7 +95,7 @@ heads.df = lego.df %>%
   mutate(gender = case_when(grepl("\\b[Mm]ale", part.name) ~ "Male",
                             grepl("\\b[Ff]emale", part.name) ~ "Female",
                             grepl("\\b([Bb]eard|[Mm]o?ustache|[Ss]tubble|[Gg]oatee|[Ss]ideburn)", part.name) ~ "Male",
-                            grepl("[Gg]irl", part.name) ~ "Female",
+                            grepl("[Gg]irl|[Ww]oman", part.name) ~ "Female",
                             T ~ "Unknown"),
          num.parts = ifelse(is.na(inv.num.sets), 1, inv.num.sets) *
            ifelse(is.na(inv.num.parts), 1, inv.num.parts)) %>%
