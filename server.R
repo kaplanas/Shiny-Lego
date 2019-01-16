@@ -5,65 +5,83 @@ shinyServer(function(input, output) {
   #############################################################################
   
   # Create the demographics graph.
-  ethnicity.graph = reactive({
-    # Store the themes chosen by the user in a variable with a shorter name.
+  demographics.graph = reactive({
+    # Store the themes and genders chosen by the user in variables with
+    # shorter names.
     selected.themes = input$demographicsThemePicker
-    # If the user has selected any specific themes, filter on those themes.
-    # Otherwise, set the theme name to an empty string so that the code below
-    # doesn't facet by theme.
-    temp.heads.df = heads.df
+    selected.genders = input$demographicsGenderPicker
+    # Determine what we're going to facet by: theme, gender, both, or neither.
+    # Filter if necessary.
+    temp.heads.df = heads.df %>%
+      mutate(facet.name = "",
+             facet.theme = "",
+             facet.gender = "")
     if(length(selected.themes) > 0) {
       temp.heads.df = temp.heads.df %>%
-        filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes))
-    } else {
-      temp.heads.df = temp.heads.df %>%
-        mutate(theme.name = "")
+        filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes)) %>%
+        mutate(facet.name = theme.name,
+               facet.theme = theme.name)
     }
-    ethnicity.edges = bind_rows(
-      # Create one edge from each color/theme to each relevant part.
+    if(length(selected.genders) > 0) {
+      temp.heads.df = temp.heads.df %>%
+        filter(gender %in% selected.genders) %>%
+        mutate(facet.name = paste(facet.name,
+                                  ifelse(length(selected.themes) > 0, ", ", ""),
+                                  gender,
+                                  sep = ""),
+               facet.gender = gender)
+    }
+    demographics.edges = bind_rows(
+      # Create one edge from each color/facet to each relevant part.
       temp.heads.df %>%
-        mutate(from = paste(color.hex, theme.name, sep = ""),
-               to = paste(part.id, color.hex, theme.name, sep = "")) %>%
+        mutate(from = paste(color.hex, facet.name),
+               to = paste(part.id, color.hex, facet.name)) %>%
         select(from, to) %>%
         distinct(),
-      # Add one edge from each theme (or the root, if no themes are selected)
-      # to each color/theme.
+      # Add one edge from each facet to each color/facet.
       temp.heads.df %>%
-        mutate(from = paste("root",  theme.name, sep = ""),
-               to = paste(color.hex, theme.name, sep = "")) %>%
+        mutate(from = facet.name,
+               to = paste(color.hex, facet.name)) %>%
+        select(from, to) %>%
+        distinct(),
+      # Add one edge from the root to each facet.
+      temp.heads.df %>%
+        mutate(from = "root",
+               to = facet.name) %>%
         select(from, to) %>%
         distinct()
     )
-    # If the user didn't select any themes, we've already added a root node.
-    # Otherwise, add one edge from the root to each theme.
-    if(length(selected.themes > 0)) {
-      ethnicity.edges = bind_rows(
-        ethnicity.edges,
-        temp.heads.df %>%
-          mutate(from = "root",
-                 to = paste("root", theme.name, sep = ""))
-      )
-    }
     # Add vertices.
-    ethnicity.vertices = bind_rows(
+    demographics.vertices = bind_rows(
       # Add one vertex for each part.
       temp.heads.df %>%
-        group_by(part.id, part.name, color.hex, theme.name, sep = "") %>%
+        group_by(part.id, part.name, color.hex, facet.name, facet.theme,
+                 facet.gender) %>%
         summarize(total.parts = sum(num.parts)) %>%
         ungroup() %>%
-        mutate(name = paste(part.id, color.hex, theme.name, sep = ""),
+        mutate(name = paste(part.id, color.hex, facet.name),
                fill.to.plot = color.hex,
                color.to.plot = "#000000") %>%
         select(name, part.name, fill.to.plot, color.to.plot, total.parts,
-               theme.name) %>%
+               facet.name, facet.theme, facet.gender) %>%
         distinct(),
-      # Add one vertex for each color/theme.
+      # Add one vertex for each color/facet.
       temp.heads.df %>%
-        mutate(name = paste(color.hex, theme.name, sep = ""),
+        mutate(name = paste(color.hex, facet.name),
                fill.to.plot = "#FFFFFF",
                color.to.plot = "#000000",
                total.parts = 1) %>%
-        select(name, fill.to.plot, color.to.plot, total.parts, theme.name) %>%
+        select(name, fill.to.plot, color.to.plot, total.parts, facet.name,
+               facet.theme, facet.gender) %>%
+        distinct(),
+      # Add one vertex for each facet.
+      temp.heads.df %>%
+        mutate(name = facet.name,
+               fill.to.plot = "#FFFFFF",
+               color.to.plot = "#000000",
+               total.parts = 1) %>%
+        select(name, fill.to.plot, color.to.plot, total.parts, facet.name,
+               facet.theme, facet.gender) %>%
         distinct(),
       # Add a root vertex.
       data.frame(name = "root",
@@ -72,78 +90,96 @@ shinyServer(function(input, output) {
                  total.parts = 1,
                  stringsAsFactors = F)
     )
-    # If any themes are selected, add one vertex for each theme.
-    if(length(selected.themes) > 0) {
-      ethnicity.vertices = bind_rows(
-        ethnicity.vertices,
-        temp.heads.df %>%
-          mutate(name = paste("root", theme.name, sep = ""),
-                 fill.to.plot = "#FFFFFF",
-                 color.to.plot = "#000000",
-                 total.parts = 1) %>%
-          select(name, fill.to.plot, color.to.plot, total.parts, theme.name) %>%
-          distinct()
-      )
-    }
     # Use ggraph to create the circlepack plot.
-    ethnicity.igraph = graph_from_data_frame(ethnicity.edges, vertices = ethnicity.vertices)
-    ethnicity.ggraph = ggraph(ethnicity.igraph,
-                              layout = "circlepack", weight = "total.parts") +
+    demographics.igraph = graph_from_data_frame(demographics.edges, vertices = demographics.vertices)
+    demographics.ggraph = ggraph(demographics.igraph,
+                                 layout = "circlepack", weight = "total.parts") +
       geom_node_circle()
     # Pull out x, y, and r for each category.
-    facet.centers = ethnicity.ggraph$data
-    if(length(selected.themes) > 0) {
-      facet.centers = facet.centers %>%
-        filter(as.character(name) != "root" &
-                 gsub("^root", "", as.character(name)) == as.character(theme.name))
-    } else {
-      facet.centers = facet.centers %>%
-        filter(as.character(name) == "root") %>%
-        mutate(theme.name = "")
-    }
-    facet.centers = facet.centers %>%
-      mutate(x.center = x, y.center = y, r.center = r) %>%
-      dplyr::select(x.center, y.center, r.center, theme.name)
+    facet.centers = demographics.ggraph$data %>%
+      filter(as.character(name) == as.character(facet.name)) %>%
+      group_by(facet.theme) %>%
+      mutate(x.center = x, y.center = y,
+             r.center = max(r)) %>%
+      ungroup() %>%
+      dplyr::select(x.center, y.center, r.center, facet.name)
     # Rescale x, y, and r for each non-root so that each theme (facet) is
-    # centered at (0, 0) and on the same scale.
-    ethnicity.faceted.data = ethnicity.ggraph$data
-    if(length(selected.themes) > 0) {
-      ethnicity.faceted.data = ethnicity.faceted.data %>%
-        filter(!is.na(theme.name))
-    } else {
-      ethnicity.faceted.data = ethnicity.faceted.data %>%
-        mutate(theme.name = "")
-    }
-    ethnicity.faceted.data = ethnicity.faceted.data %>%
-      left_join(facet.centers, by = c("theme.name")) %>%
+    # centered at (0, 0) and the same size.  Within a theme, sub-facets by
+    # gender are the same scale; therefore, facets with smaller counts will
+    # appear smaller.
+    demographics.faceted.data = demographics.ggraph$data %>%
+      rownames_to_column("rowname") %>%
+      inner_join(facet.centers, by = c("facet.name")) %>%
       mutate(x.faceted = (x - x.center) / r.center,
              y.faceted = (y - y.center) / r.center,
              r.faceted = r / r.center)
     # Feed the rescaled dataset into geom_circle.
-    # print(head(ethnicity.faceted.data[,c("x.faceted", "y.faceted", "r.faceted", "fill.to.plot", "color.to.plot", "theme.name")]))
-    ethnicity.facet.graph = ggplot(ethnicity.faceted.data,
-                                   aes(x0 = x.faceted,
-                                       y0 = y.faceted,
-                                       r = r.faceted,
-                                       fill = fill.to.plot,
-                                       color = color.to.plot)) +
+    # print(head(demographics.faceted.data[,c("x.faceted", "y.faceted", "r.faceted", "fill.to.plot", "color.to.plot", "facet.name")]))
+    demographics.facet.graph = ggplot(demographics.faceted.data,
+                                      aes(x0 = x.faceted,
+                                          y0 = y.faceted,
+                                          r = r.faceted,
+                                          fill = fill.to.plot,
+                                          color = color.to.plot)) +
       geom_circle() +
-      scale_fill_manual(values = sort(unique(as.character(ethnicity.faceted.data$fill.to.plot)))) +
-      scale_color_manual(values = sort(unique(as.character(ethnicity.faceted.data$color.to.plot)))) +
+      scale_fill_manual(values = sort(unique(as.character(demographics.faceted.data$fill.to.plot)))) +
+      scale_color_manual(values = sort(unique(as.character(demographics.faceted.data$color.to.plot)))) +
       coord_equal() +
       guides(fill = F, color = F, size = F) +
       theme_void()
     if(length(input$demographicsThemePicker) > 0) {
-      ethnicity.facet.graph = ethnicity.facet.graph +
-        facet_wrap(~ theme.name) +
+      if(length(input$demographicsGenderPicker) > 0) {
+        demographics.facet.graph = demographics.facet.graph +
+          facet_grid(facet.theme ~ facet.gender) +
+          theme(strip.text.y = element_text(angle = -90))
+      } else {
+        demographics.facet.graph = demographics.facet.graph +
+          facet_wrap(~ facet.theme)
+      }
+    } else if(length(input$demographicsGenderPicker) > 0) {
+      demographics.facet.graph = demographics.facet.graph +
+        facet_wrap(~ facet.gender)
+    }
+    if(length(input$demographicsThemePicker) > 0 | length(input$demographicsGenderPicker) > 0) {
+      demographics.facet.graph = demographics.facet.graph +
         theme(strip.text = element_text(size = 20, face = "bold"))
     }
-    ethnicity.facet.graph
+    demographics.facet.graph
   })
   
   # The actual demographics graph.
   output$demographicsPlot <- renderPlot({
-    ethnicity.graph()
+    demographics.graph()
+  })
+  demographics.plot.width = reactive({
+    numeric.width = 700
+    if(length(input$demographicsGenderPicker) > 0) {
+      numeric.width = length(input$demographicsGenderPicker) * 300
+    } else if(length(input$demographicsThemePicker) > 0) {
+      numeric.width = wrap_dims(length(input$demographicsThemePicker))[2] * 300
+    }
+    print(paste("width:", numeric.width))
+    return(paste(numeric.width, "px", sep = ""))
+  })
+  demographics.plot.height = reactive({
+    numeric.height = 700
+    if(length(input$demographicsGenderPicker > 0)) {
+      if(length(input$demographicsThemePicker > 0)) {
+        numeric.height = length(input$demographicsThemePicker) * 300
+      } else {
+        numeric.height = 300
+      }
+    } else if(length(input$demographicsThemePicker) > 0) {
+      numeric.height = wrap_dims(length(input$demographicsThemePicker))[1] * 300
+    }
+    print(paste("height:", numeric.height))
+    return(paste(numeric.height, "px", sep = ""))
+  })
+  output$demographicsPlotUI <- renderUI({
+    plotOutput("demographicsPlot",
+               width = demographics.plot.width(),
+               height = demographics.plot.height(),
+               hover = hoverOpts("demographics_plot_hover", delay = 20, delayType = "debounce"))
   })
   
   # Tooltip for the demographics graph.
@@ -154,12 +190,19 @@ shinyServer(function(input, output) {
     # Find the data point that corresponds to the circle the mouse is hovering
     # over.
     if(!is.null(hover)) {
-      point = ethnicity.graph()$data %>%
+      point = demographics.graph()$data %>%
         filter(leaf) %>%
         filter(r.faceted >= (((x.faceted - hover$x) ^ 2) + ((y.faceted - hover$y) ^ 2)) ^ .5)
-      if(length(input$demographicsThemePicker) > 0) {
+      if(length(input$demographicsGenderPicker) > 0) {
         point = point %>%
-          filter(as.character(theme.name) ==  hover$panelvar1)
+          filter(as.character(facet.gender) ==  hover$panelvar1)
+        if(length(input$demographicsThemePicker) > 0) {
+          point = point %>%
+            filter(as.character(facet.theme) == hover$panelvar2)
+        }
+      } else if(length(input$demographicsThemePicker) > 0) {
+        point = point %>%
+          filter(as.character(facet.theme) == hover$panelvar1)
       }
     } else {
       return(NULL)
@@ -182,6 +225,10 @@ shinyServer(function(input, output) {
       style = style,
       p(HTML(as.character(point$part.name)))
     )
+  })
+  
+  output$demographicsGuide = renderText({
+    "Blah blah blah."
   })
   
 })

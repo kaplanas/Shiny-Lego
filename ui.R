@@ -14,7 +14,7 @@ shinyUI(navbarPage(
     # Sidebar panel for controls.
     sidebarPanel(
       pickerInput(
-        "demographicsThemePicker",
+        "demographicsThemePicker", "Filter to specific themes:",
         choices = data.frame(
           theme.counts.df %>%
             filter(total.heads > 0) %>%
@@ -23,24 +23,35 @@ shinyUI(navbarPage(
         )$label,
         options = list(`actions-box` = T),
         multiple = T
+      ),
+      pickerInput(
+        "demographicsGenderPicker", "Filter to specific genders:",
+        choices = sort(unique(heads.df$gender)),
+        options = list(`actions-box` = T),
+        multiple = T
       )
     ),
     
-    # Main panel for plot.
-    mainPanel(
+    # Main panel, with one tab for the plot and one for text.
+    mainPanel(tabsetPanel(
+      type = "tabs",
       # Circle-packing plot.
-      div(
-        style = "position:relative",
-        plotOutput(
-          "demographicsPlot",
-          width = "700px",
-          height = "700px",
-          hover = hoverOpts("demographics_plot_hover", delay = 20, delayType = "debounce")
-        ),
-        uiOutput("demographicsHover")
-      )
+      tabPanel(
+        "Plot",
+        div(
+          style = "position:relative",
+          uiOutput(
+            "demographicsPlotUI"#,
+            # width = "auto",
+            # height = "auto",
+            # hover = hoverOpts("demographics_plot_hover", delay = 20, delayType = "debounce")
+          ),
+          uiOutput("demographicsHover")
+        )
+      ),
+      tabPanel("Guide", textOutput("demographicsGuide"))
     )
     
-  )
+  ))
   
 ))
