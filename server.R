@@ -245,6 +245,7 @@ shinyServer(function(input, output) {
     temp.heads.df = heads.df %>%
       dplyr::select(theme.name, theme.num.parts, theme.ethnic.diversity,
                     theme.pct.female) %>%
+      filter(theme.num.parts > 1) %>%
       distinct()
     # Add a "measure" column with the measure specified by the user.
     if(input$demographicsMeasurePicker == "Ethnic diversity") {
@@ -277,8 +278,56 @@ shinyServer(function(input, output) {
                          sec.axis = dup_axis()) +
       scale_fill_continuous("Number of pieces", trans = "log",
                             breaks = c(2, 20, 200, 2000),
-                            high = "#132B43", low = "#56B1F7") +
+                            high = "black", low = "white") +
       coord_flip()
+  })
+  
+  #############################################################################
+  # Find sets with a specific ethnicity or gender                             #
+  #############################################################################
+  
+  output$demographicsSets = renderDataTable({
+    # Store the themes and genders chosen by the user in variables with
+    # shorter names.
+    selected.themes = input$demographicsSetThemePicker
+    selected.genders = input$demographicsSetGenderPicker
+    # Get all the unique hexadecimal colors and, for each one, whether text
+    # printed over that color should be black or white.
+    unique.colors = sort(unique(heads.df$color.hex))
+    text.color = ifelse(((strtoi(paste("0X",
+                                       substr(unique.colors, 2, 3),
+                                       sep = "")) * 0.299) +
+                           (strtoi(paste("0X",
+                                         substr(unique.colors, 4, 5),
+                                         sep = "")) * 0.587) +
+                           (strtoi(paste("0X",
+                                         substr(unique.colors, 6, 7),
+                                         sep = "")) * 0.114)) > 186,
+                        "#000000",
+                        "#FFFFFF")
+    # Get the dataset to display.  Filter if necessary.
+    temp.heads.df = heads.df %>%
+      dplyr::select(theme.name, set.name, part.name, gender,
+                    color.name, color.hex, num.parts)
+    if(length(selected.themes) > 0) {
+      temp.heads.df = temp.heads.df %>%
+        filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes))
+    }
+    if(length(selected.genders) > 0) {
+      temp.heads.df = temp.heads.df %>%
+        filter(gender %in% selected.genders)
+    }
+    # Display the dataset.
+    datatable(temp.heads.df,
+              options = list(pageLength = 100,
+                             columnDefs = list(list(targets = 5,
+                                                    visible = F))),
+              rownames = F,
+              colnames = c("Theme", "Set", "Part", "Gender", "Color",
+                           "Color hex", "Number of pieces")) %>%
+      formatStyle("color.hex", target = "row",
+                  backgroundColor = styleEqual(unique.colors, unique.colors),
+                  color = styleEqual(unique.colors, text.color))
   })
   
 })

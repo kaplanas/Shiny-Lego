@@ -7,7 +7,7 @@ library(shinyWidgets)
 library(igraph)
 library(ggraph)
 library(scales)
-library(grid)
+library(DT)
 
 theme_set(theme_bw())
 

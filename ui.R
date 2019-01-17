@@ -89,6 +89,39 @@ shinyUI(navbarPage(
                      width = "700px", height = "1500px")
         )
         
+      ),
+      
+      # Table for finding sets with pieces of particular ethnicity/gender.
+      tabPanel(
+        
+        "Find sets with a specific ethnicity or gender",
+        
+        # Sidebar panel for controls.
+        sidebarPanel(
+          pickerInput(
+            "demographicsSetThemePicker", "Filter to specific themes:",
+            choices = data.frame(
+              theme.counts.df %>%
+                filter(total.heads > 0) %>%
+                mutate(label = paste(theme.name, " (", total.heads, ")", sep = "")) %>%
+                arrange(desc(total.heads), theme.name)
+            )$label,
+            options = list(`actions-box` = T),
+            multiple = T
+          ),
+          pickerInput(
+            "demographicsSetGenderPicker", "Filter to specific genders:",
+            choices = sort(unique(heads.df$gender)),
+            options = list(`actions-box` = T),
+            multiple = T
+          )
+        ),
+        
+        # Main panel with table.
+        mainPanel(
+          dataTableOutput("demographicsSets")
+        )
+        
       )
     
     )
