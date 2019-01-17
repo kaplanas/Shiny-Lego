@@ -9,6 +9,8 @@ library(ggraph)
 library(scales)
 library(grid)
 
+theme_set(theme_bw())
+
 # Download all the tables from rebrickable.com; name each one "tablename.df".
 table.names = c("themes", "colors", "part_categories", "parts", "inventories",
                 "sets", "inventory_parts", "inventory_sets",
@@ -99,5 +101,24 @@ heads.df = lego.df %>%
                             T ~ "Unknown"),
          num.parts = ifelse(is.na(inv.num.sets), 1, inv.num.sets) *
            ifelse(is.na(inv.num.parts), 1, inv.num.parts)) %>%
+  group_by(theme.name) %>%
+  mutate(theme.num.parts = sum(num.parts),
+         theme.pct.female = (sum(ifelse(gender == "Female", 1, 0)) /
+           sum(ifelse(gender == "Male" | gender == "Female", 1, 0))) * 100) %>%
+  ungroup() %>%
+  left_join(heads.df %>%
+              group_by(theme.name, color.hex) %>%
+              summarize(theme.color.num.parts = sum(num.parts)) %>%
+              ungroup() %>%
+              group_by(theme.name) %>%
+              summarize(theme.ethnic.diversity = -1 *
+                          sum((theme.color.num.parts /
+                                 sum(theme.color.num.parts)) *
+                                log(theme.color.num.parts /
+                                      sum(theme.color.num.parts),
+                                    2))) %>%
+              dplyr::select(theme.name, theme.ethnic.diversity),
+            by = c("theme.name")) %>%
   select(part.id, part.name, color.name, color.hex, color.is.trans, gender,
-         set.name, theme.name, sub.theme.name, sub.sub.theme.name, num.parts)
+         set.name, theme.name, sub.theme.name, sub.sub.theme.name, num.parts,
+         theme.num.parts, theme.pct.female, theme.ethnic.diversity)

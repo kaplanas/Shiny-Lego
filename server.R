@@ -1,7 +1,13 @@
 shinyServer(function(input, output) {
   
   #############################################################################
-  # Demographics                                                              #
+  #############################################################################
+  ## Demographics                                                            ##
+  #############################################################################
+  #############################################################################
+  
+  #############################################################################
+  # Gender and ethnicity                                                      #
   #############################################################################
   
   # Create the demographics graph.
@@ -228,6 +234,51 @@ shinyServer(function(input, output) {
                    as.character(point$part.name),
                    sep = "<br/>")))
     )
+  })
+  
+  #############################################################################
+  # Ethnic diversity and gender parity                                        #
+  #############################################################################
+  
+  output$demographicsDiversity = renderPlot({
+    # Get one row per theme, with the relevant columns.
+    temp.heads.df = heads.df %>%
+      dplyr::select(theme.name, theme.num.parts, theme.ethnic.diversity,
+                    theme.pct.female) %>%
+      distinct()
+    # Add a "measure" column with the measure specified by the user.
+    if(input$demographicsMeasurePicker == "Ethnic diversity") {
+      temp.heads.df = temp.heads.df %>%
+        mutate(measure = theme.ethnic.diversity)
+    } else if(input$demographicsMeasurePicker == "Percent female") {
+      temp.heads.df = temp.heads.df %>%
+        mutate(measure = theme.pct.female)
+    }
+    # Sort by the column specified by the user.
+    if(input$demographicsOrderPicker == "Measure") {
+      temp.heads.df = temp.heads.df %>%
+        arrange(measure, desc(theme.name))
+    } else if(input$demographicsOrderPicker == "Number of pieces") {
+      temp.heads.df  = temp.heads.df %>%
+        arrange(theme.num.parts, desc(theme.name))
+    } else if(input$demographicsOrderPicker == "Theme name") {
+      temp.heads.df = temp.heads.df %>%
+        arrange(desc(theme.name))
+    }
+    temp.heads.df$theme.name = factor(temp.heads.df$theme.name,
+                                      levels = temp.heads.df$theme.name)
+    # Make the plot.
+    temp.heads.df %>%
+      filter(!is.na(measure)) %>%
+      ggplot(aes(x = theme.name, y = measure, fill = theme.num.parts)) +
+      geom_bar(stat = "identity", color = "black", size = 0.4) +
+      scale_x_discrete("") +
+      scale_y_continuous(input$demographicsMeasurePicker,
+                         sec.axis = dup_axis()) +
+      scale_fill_continuous("Number of pieces", trans = "log",
+                            breaks = c(2, 20, 200, 2000),
+                            high = "#132B43", low = "#56B1F7") +
+      coord_flip()
   })
   
 })

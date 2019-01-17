@@ -16,10 +16,10 @@ shinyUI(navbarPage(
       
       type = "tabs",
       
-      # Circle-packing plot.
+      # Circle-packing plot of ethnicity and gender.
       tabPanel(
         
-        "Graph of Ethnicity and Gender",
+        "Ethnicity and gender",
         
         # Sidebar panel for controls.
         sidebarPanel(
@@ -42,7 +42,7 @@ shinyUI(navbarPage(
           ),
           tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
           tags$p("Each circle represents a unique minifigure or minidoll head.  The area of the circle is proportional to the number of pieces across all sets.  Use the filters to facet by theme and/or gender.  Hover over a circle to see the part name."),
-          tags$p("\"Ethnicity\" is the color of the head."),
+          tags$p("\"Ethnicity\" is the color of the head.  Yes, it's silly."),
           tags$p("Gender is inferred from keywords in the part name."),
           tags$ul(
             tags$li("Male: \"Male\", \"Beard\", \"Moustache\", \"Stubble\", \"Goatee\", \"Sideburn\""),
@@ -58,6 +58,37 @@ shinyUI(navbarPage(
           uiOutput("demographicsHover")
         ))
       
+      ),
+      
+      # Bar plot of ethnic diversity and % female.
+      tabPanel(
+        
+        "Ethnic diversity and gender parity by theme",
+        
+        # Sidebar panel for controls.
+        sidebarPanel(
+          pickerInput(
+            "demographicsMeasurePicker", "Choose measure to plot:",
+            choices = c("Ethnic diversity", "Percent female"),
+            selected = "Ethnic diversity",
+            multiple = F
+          ),
+          pickerInput(
+            "demographicsOrderPicker", "Order by:",
+            choices = c("Measure", "Number of pieces", "Theme name"),
+            selected = "Measure",
+            multiple = F
+          ),
+          tags$p("Ethnic diversity is the Shannon entropy (base 2) of color over all pieces."),
+          tags$p("Percent female is the percent of female pieces out of all pieces, excluding pieces of unknown gender.")
+        ),
+        
+        # Main panel with plot.
+        mainPanel(
+          plotOutput("demographicsDiversity",
+                     width = "700px", height = "1500px")
+        )
+        
       )
     
     )
