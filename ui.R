@@ -41,7 +41,7 @@ shinyUI(navbarPage(
             multiple = T
           ),
           tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
-          tags$p("Each circle represents a unique minifigure head.  The area of the circle is proportional to the number of pieces across all sets.  Use the filters to facet by theme and/or gender.  Hover over a circle to see the part name."),
+          tags$p("Each circle represents a unique minifigure or minidoll head.  The area of the circle is proportional to the number of pieces across all sets.  Use the filters to facet by theme and/or gender.  Hover over a circle to see the part name."),
           tags$p("\"Ethnicity\" is the color of the head."),
           tags$p("Gender is inferred from keywords in the part name."),
           tags$ul(

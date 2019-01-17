@@ -91,7 +91,7 @@ theme.counts.df = lego.df %>%
 
 # Create a table of minifigure heads (for demographics).
 heads.df = lego.df %>%
-  filter(part.category.name == "Minifig Heads") %>%
+  filter(grepl("Mini(fig|doll) Heads", part.category.name)) %>%
   mutate(gender = case_when(grepl("\\b[Mm]ale", part.name) ~ "Male",
                             grepl("\\b[Ff]emale", part.name) ~ "Female",
                             grepl("\\b([Bb]eard|[Mm]o?ustache|[Ss]tubble|[Gg]oatee|[Ss]ideburn)", part.name) ~ "Male",

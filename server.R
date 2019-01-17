@@ -114,7 +114,6 @@ shinyServer(function(input, output) {
              y.faceted = (y - y.center) / r.center,
              r.faceted = r / r.center)
     # Feed the rescaled dataset into geom_circle.
-    # print(head(demographics.faceted.data[,c("x.faceted", "y.faceted", "r.faceted", "fill.to.plot", "color.to.plot", "facet.name")]))
     demographics.facet.graph = ggplot(demographics.faceted.data,
                                       aes(x0 = x.faceted,
                                           y0 = y.faceted,
@@ -221,7 +220,13 @@ shinyServer(function(input, output) {
     # Create the actual tooltip as a wellPanel.
     wellPanel(
       style = style,
-      p(HTML(as.character(point$part.name)))
+      p(HTML(paste(paste("<b>", point$total.parts,
+                         " piece",
+                         ifelse(point$total.parts == 1, "", "s"),
+                         "</b>",
+                         sep = ""),
+                   as.character(point$part.name),
+                   sep = "<br/>")))
     )
   })
   
