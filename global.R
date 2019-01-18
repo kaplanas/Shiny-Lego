@@ -24,6 +24,24 @@ for(table.name in table.names) {
 }
 rm(table.name)
 
+# Add useful columns to the table of colors: hexadecimal (with prefixed
+# octothorpe) and the color text should be when printed on that background
+# (black or white).
+# https://stackoverflow.com/questions/3942878/how-to-decide-font-color-in-white-or-black-depending-on-background-color
+colors.df = colors.df %>%
+  mutate(color.hex = paste("#", rgb, sep = ""),
+         text.color.hex = ifelse(((strtoi(paste("0X",
+                                                substr(rgb, 1, 2),
+                                                sep = "")) * 0.299) +
+                                    (strtoi(paste("0X",
+                                                  substr(rgb, 3, 4),
+                                                  sep = "")) * 0.587) +
+                                    (strtoi(paste("0X",
+                                                  substr(rgb, 6, 7),
+                                                  sep = "")) * 0.114)) > 186,
+                                 "#000000",
+                                 "#FFFFFF"))
+
 # Create a table of themes that flattens out the theme tree structure.
 theme.tree.df = themes.df %>%
   mutate(theme.id = id,
@@ -72,14 +90,13 @@ lego.df = sets.df %>%
   left_join(colors.df, by = c("color_id" = "id")) %>%
   mutate(color.id = color_id,
          color.name = name.y.y,
-         color.hex = paste("#", rgb, sep = ""),
          color.is.trans = case_when(is_trans == "f" ~ F,
                                     is_trans == "t" ~ T)) %>%
   select(set.id, set.name, year, set.num.parts, theme.id, theme.name,
          sub.theme.name, sub.sub.theme.name, inventory.id, inv.num.sets,
          inv.num.parts, total.parts, part.id, part.name, part.category.id,
          part.category.name, part.is.spare, color.id, color.name, color.hex,
-         color.is.trans)
+         color.is.trans, text.color.hex)
 
 # Create a data frame with distinct top-level themes and various counts
 # associated with each (for displaying in input widgets).
@@ -116,9 +133,10 @@ heads.df = lego.df %>%
                                     2))) %>%
               dplyr::select(theme.name, theme.ethnic.diversity),
             by = c("theme.name")) %>%
-  select(part.id, part.name, color.name, color.hex, color.is.trans, gender,
-         set.name, theme.name, sub.theme.name, sub.sub.theme.name, num.parts,
-         theme.num.parts, theme.pct.female, theme.ethnic.diversity)
+  select(part.id, part.name, color.name, color.hex, color.is.trans,
+         text.color.hex, gender, set.name, theme.name, sub.theme.name,
+         sub.sub.theme.name, num.parts, theme.num.parts, theme.pct.female,
+         theme.ethnic.diversity)
 
 # Update theme count table.
 theme.counts.df = theme.counts.df %>%

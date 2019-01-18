@@ -293,21 +293,15 @@ shinyServer(function(input, output) {
     # Store the themes and genders chosen by the user in variables with
     # shorter names.
     selected.themes = input$demographicsSetThemePicker
+    selected.ethnicities = input$demographicsSetEthnicityPicker
     selected.genders = input$demographicsSetGenderPicker
     # Get all the unique hexadecimal colors and, for each one, whether text
     # printed over that color should be black or white.
     unique.colors = sort(unique(heads.df$color.hex))
-    text.color = ifelse(((strtoi(paste("0X",
-                                       substr(unique.colors, 2, 3),
-                                       sep = "")) * 0.299) +
-                           (strtoi(paste("0X",
-                                         substr(unique.colors, 4, 5),
-                                         sep = "")) * 0.587) +
-                           (strtoi(paste("0X",
-                                         substr(unique.colors, 6, 7),
-                                         sep = "")) * 0.114)) > 186,
-                        "#000000",
-                        "#FFFFFF")
+    text.color = data.frame(heads.df %>%
+                              select(color.hex, text.color.hex) %>%
+                              distinct() %>%
+                              arrange(color.hex))$text.color.hex
     # Get the dataset to display.  Filter if necessary.
     temp.heads.df = heads.df %>%
       dplyr::select(theme.name, set.name, part.name, gender,
@@ -315,6 +309,10 @@ shinyServer(function(input, output) {
     if(length(selected.themes) > 0) {
       temp.heads.df = temp.heads.df %>%
         filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes))
+    }
+    if(length(selected.ethnicities) > 0) {
+      temp.heads.df = temp.heads.df %>%
+        filter(color.name %in% selected.ethnicities)
     }
     if(length(selected.genders) > 0) {
       temp.heads.df = temp.heads.df %>%

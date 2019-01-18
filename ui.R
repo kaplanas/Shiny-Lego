@@ -90,6 +90,31 @@ shinyUI(navbarPage(
         sidebarPanel(
           theme.picker.input("demographicsSetThemePicker", "total.heads"),
           pickerInput(
+            "demographicsSetEthnicityPicker", "Filter to specific ethnicities:",
+            choices = sort(unique(heads.df$color.name)),
+            choicesOpt = list(content =
+                                sapply(sort(unique(heads.df$color.name)),
+                                       function(x) {
+                                         background.color = paste("background-color: ",
+                                                                  unique(colors.df$color.hex[colors.df$name == x]),
+                                                                  ";",
+                                                                  sep = "")
+                                         text.color = paste("color: ",
+                                                            unique(colors.df$text.color.hex[colors.df$name == x]),
+                                                            ";",
+                                                            sep = "")
+                                         num.heads = nrow(heads.df[heads.df$color.name == x,])
+                                         HTML(paste("<span style=\"padding: 2px; ",
+                                                    background.color, " ",
+                                                    text.color, "\">",
+                                                    x, " (", num.heads, ")",
+                                                    "</span>",
+                                                    sep = ""))
+                                               })),
+            options = list(`actions-box` = T),
+            multiple = T
+          ),
+          pickerInput(
             "demographicsSetGenderPicker", "Filter to specific genders:",
             choices = sort(unique(heads.df$gender)),
             options = list(`actions-box` = T),
