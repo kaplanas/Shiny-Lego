@@ -84,18 +84,15 @@ lego.df = sets.df %>%
 # Create a data frame with distinct top-level themes and various counts
 # associated with each (for displaying in input widgets).
 theme.counts.df = lego.df %>%
-  mutate(total.heads = ifelse(part.category.name == "Minifig Heads",
-                              total.parts, 0)) %>%
   group_by(theme.name) %>%
-  summarize(total.parts = sum(total.parts, na.rm = T),
-            total.heads = sum(total.heads, na.rm = T)) %>%
+  summarize(total.parts = sum(total.parts, na.rm = T)) %>%
   ungroup()
 
 # Create a table of minifigure heads (for demographics).
 heads.df = lego.df %>%
   filter(grepl("Mini(fig|doll) Heads", part.category.name)) %>%
-  mutate(gender = case_when(grepl("\\b[Mm]ale", part.name) ~ "Male",
-                            grepl("\\b[Ff]emale", part.name) ~ "Female",
+  mutate(gender = case_when(grepl("\\b[Mm]ale\\b", part.name) ~ "Male",
+                            grepl("\\b[Ff]emale\\b", part.name) ~ "Female",
                             grepl("\\b([Bb]eard|[Mm]o?ustache|[Ss]tubble|[Gg]oatee|[Ss]ideburn)", part.name) ~ "Male",
                             grepl("[Gg]irl|[Ww]oman", part.name) ~ "Female",
                             T ~ "Unknown"),
@@ -122,3 +119,28 @@ heads.df = lego.df %>%
   select(part.id, part.name, color.name, color.hex, color.is.trans, gender,
          set.name, theme.name, sub.theme.name, sub.sub.theme.name, num.parts,
          theme.num.parts, theme.pct.female, theme.ethnic.diversity)
+
+# Update theme count table.
+theme.counts.df = theme.counts.df %>%
+  left_join(heads.df %>%
+              mutate(total.heads = theme.num.parts) %>%
+              select(theme.name, total.heads) %>%
+              distinct(),
+            by = c("theme.name"))
+
+# Function to create a theme picker input.  We will need several of these.
+theme.picker.input = function(input.id, column.with.counts) {
+  temp.theme.counts.df = theme.counts.df
+  temp.theme.counts.df[,"count.to.display"] = theme.counts.df[,column.with.counts]
+  pickerInput(
+    input.id, "Filter to specific themes:",
+    choices = data.frame(
+      temp.theme.counts.df %>%
+        filter(count.to.display > 0) %>%
+        mutate(label = paste(theme.name, " (", count.to.display, ")", sep = "")) %>%
+        arrange(desc(count.to.display), theme.name)
+    )$label,
+    options = list(`actions-box` = T),
+    multiple = T
+  )
+}

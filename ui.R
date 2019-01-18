@@ -9,7 +9,7 @@ shinyUI(navbarPage(
     "Demographics",
     
     # Make sure the cursor has the default shape, even when using tooltips
-    tags$head(tags$style(HTML("#demographicsPlot { cursor: default; }"))),
+    tags$head(tags$style(HTML("#demographicsCirclePlot { cursor: default; }"))),
     
     # One tab for each plot/table.
     tabsetPanel(
@@ -23,19 +23,9 @@ shinyUI(navbarPage(
         
         # Sidebar panel for controls.
         sidebarPanel(
+          theme.picker.input("demographicsCircleThemePicker", "total.heads"),
           pickerInput(
-            "demographicsThemePicker", "Filter to specific themes:",
-            choices = data.frame(
-              theme.counts.df %>%
-                filter(total.heads > 0) %>%
-                mutate(label = paste(theme.name, " (", total.heads, ")", sep = "")) %>%
-                arrange(desc(total.heads), theme.name)
-            )$label,
-            options = list(`actions-box` = T),
-            multiple = T
-          ),
-          pickerInput(
-            "demographicsGenderPicker", "Filter to specific genders:",
+            "demographicsCircleGenderPicker", "Filter to specific genders:",
             choices = sort(unique(heads.df$gender)),
             options = list(`actions-box` = T),
             multiple = T
@@ -54,8 +44,8 @@ shinyUI(navbarPage(
         # Main panel with plot.
         mainPanel(div(
           style = "position:relative",
-          uiOutput("demographicsPlotUI"),
-          uiOutput("demographicsHover")
+          uiOutput("demographicsCirclePlotUI"),
+          uiOutput("demographicsCircleHover")
         ))
       
       ),
@@ -98,17 +88,7 @@ shinyUI(navbarPage(
         
         # Sidebar panel for controls.
         sidebarPanel(
-          pickerInput(
-            "demographicsSetThemePicker", "Filter to specific themes:",
-            choices = data.frame(
-              theme.counts.df %>%
-                filter(total.heads > 0) %>%
-                mutate(label = paste(theme.name, " (", total.heads, ")", sep = "")) %>%
-                arrange(desc(total.heads), theme.name)
-            )$label,
-            options = list(`actions-box` = T),
-            multiple = T
-          ),
+          theme.picker.input("demographicsSetThemePicker", "total.heads"),
           pickerInput(
             "demographicsSetGenderPicker", "Filter to specific genders:",
             choices = sort(unique(heads.df$gender)),
