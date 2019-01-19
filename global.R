@@ -154,19 +154,26 @@ hair.df = lego.df %>%
 
 # Create another table with style keywords; a piece gets multiple rows if it's
 # associated with multiple styles.
-hair.style.words = c("long", "bangs", "ponytail", "short", "wavy", "midlength",
-                     "bun", "tousled", "braid", "straight", "spiked", "bushy",
-                     "curl", "widows peak", "bob", "pigtails", "tied", "bald",
-                     "coil", "dreadlocks", "bowl", "mohawk", "afro",
-                     "combover", "mullet")
+hair.style.words.df = data.frame(
+  word = c("Long", "Bangs", "Ponytail", "Short", "Wavy", "Mid-length", "Bun",
+           "Tousled", "Braid", "Straight", "Spiked", "Bushy",
+           "Curled", "Widow's peak", "Bob", "Pigtails", "Tied", "Bald",
+           "Coiled", "Dreadlocks", "Bowl", "Mohawk", "Afro",
+           "Combover", "Mullet"),
+  regex = c("long", "bangs", "ponytail", "short", "wavy", "midlength", "bun",
+            "tousled", "braid", "straight", "spik(ed|y)", "bushy",
+            "curl(ed|y|s)", "widows peak", "bob", "pigtails", "tie(d|s)",
+            "bald", "coil", "dreadlocks", "bowl", "mohawk", "afro", "combover",
+            "mullet")
+)
 hair.style.df = do.call(
   "bind_rows",
-  lapply(
-    hair.style.words,
+  apply(
+    hair.style.words.df, 1,
     function(x) {
       hair.df %>%
-        filter(grepl(x, gsub("[^A-Za-z0-9]", "", tolower(part.name)))) %>%
-        mutate(style = x)
+        filter(grepl(x[2], gsub("[^A-Za-z0-9]", "", tolower(part.name)))) %>%
+        mutate(style = x[1])
     }
   )
 )

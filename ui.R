@@ -130,6 +130,50 @@ shinyUI(navbarPage(
     
     )
     
+  ),
+  
+  # Fashion
+  tabPanel(
+    
+    "Fashion",
+    
+    # Make sure the cursor has the default shape, even when using tooltips
+    tags$head(tags$style(HTML("#hairCirclePlot { cursor: default; }"))),
+    
+    # One tab for each plot/table.
+    tabsetPanel(
+      
+      type = "tabs",
+      
+      # Circle-packing plot of hair style and color.
+      tabPanel(
+        
+        "Hair",
+        
+        # Sidebar panel for controls.
+        sidebarPanel(
+          theme.picker.input("hairCircleThemePicker", "total.hair"),
+          pickerInput(
+            "hairCircleStylePicker", "Filter to specific styles:",
+            choices = sort(unique(hair.style.df$style)),
+            multiple = T
+          ),
+          tags$p("Each circle represents a hair piece for a minifigure or minidoll.  The area of the circle is proportional to the number of pieces across all sets.  Use the filters to facet by theme and/or style.  Hover over a circle to see the part name."),
+          tags$p("The color of the circle is the color of the hair."),
+          tags$p("Style is inferred from keywords in the part name.  A single part may have multiple styles; when you facet by style, a part will appearh in <i>all</i> relevant facets.")
+        ),
+        
+        # Main panel with plot.
+        mainPanel(div(
+          style = "position:relative",
+          uiOutput("hairCirclePlotUI"),
+          uiOutput("hairCircleHover")
+        ))
+        
+      )
+      
+    )
+    
   )
   
 ))
