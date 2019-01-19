@@ -1,7 +1,7 @@
 shinyUI(navbarPage(
   
   # Application title.
-  "Lego Database",
+  "Life in the Lego World",
   
   # Demographics.
   tabPanel(
@@ -111,7 +111,6 @@ shinyUI(navbarPage(
                                                     "</span>",
                                                     sep = ""))
                                                })),
-            options = list(`actions-box` = T),
             multiple = T
           ),
           pickerInput(

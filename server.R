@@ -10,7 +10,7 @@ shinyServer(function(input, output) {
   # Gender and ethnicity                                                      #
   #############################################################################
   
-  # Create the demographics graph.
+  # Create the demographics circle graph.
   demographics.circle.graph = reactive({
     # Store the themes and genders chosen by the user in variables with
     # shorter names.
@@ -21,7 +21,7 @@ shinyServer(function(input, output) {
     temp.heads.df = heads.df %>%
       mutate(facet.name = "",
              facet.theme = "",
-             facet.gender = "")
+             facet.other = "")
     if(length(selected.themes) > 0) {
       temp.heads.df = temp.heads.df %>%
         filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes)) %>%
@@ -35,208 +35,33 @@ shinyServer(function(input, output) {
                                   ifelse(length(selected.themes) > 0, ", ", ""),
                                   gender,
                                   sep = ""),
-               facet.gender = gender)
+               facet.other = gender)
     }
-    demographics.circle.edges = bind_rows(
-      # Create one edge from each color/facet to each relevant part.
-      temp.heads.df %>%
-        mutate(from = paste(color.hex, facet.name),
-               to = paste(part.id, color.hex, facet.name)) %>%
-        select(from, to) %>%
-        distinct(),
-      # Add one edge from each facet to each color/facet.
-      temp.heads.df %>%
-        mutate(from = facet.name,
-               to = paste(color.hex, facet.name)) %>%
-        select(from, to) %>%
-        distinct(),
-      # Add one edge from the root to each facet.
-      temp.heads.df %>%
-        mutate(from = "root",
-               to = facet.name) %>%
-        select(from, to) %>%
-        distinct()
-    )
-    # Add vertices.
-    demographics.circle.vertices = bind_rows(
-      # Add one vertex for each part.
-      temp.heads.df %>%
-        group_by(part.id, part.name, color.hex, facet.name, facet.theme,
-                 facet.gender) %>%
-        summarize(total.parts = sum(num.parts)) %>%
-        ungroup() %>%
-        mutate(name = paste(part.id, color.hex, facet.name),
-               fill.to.plot = color.hex,
-               color.to.plot = "#000000") %>%
-        select(name, part.name, fill.to.plot, color.to.plot, total.parts,
-               facet.name, facet.theme, facet.gender) %>%
-        distinct(),
-      # Add one vertex for each color/facet.
-      temp.heads.df %>%
-        mutate(name = paste(color.hex, facet.name),
-               fill.to.plot = "#FFFFFF",
-               color.to.plot = "#000000",
-               total.parts = 1) %>%
-        select(name, fill.to.plot, color.to.plot, total.parts, facet.name,
-               facet.theme, facet.gender) %>%
-        distinct(),
-      # Add one vertex for each facet.
-      temp.heads.df %>%
-        mutate(name = facet.name,
-               fill.to.plot = "#FFFFFF",
-               color.to.plot = "#000000",
-               total.parts = 1) %>%
-        select(name, fill.to.plot, color.to.plot, total.parts, facet.name,
-               facet.theme, facet.gender) %>%
-        distinct(),
-      # Add a root vertex.
-      data.frame(name = "root",
-                 fill.to.plot = "#FFFFFF",
-                 color.to.plot = "#000000",
-                 total.parts = 1,
-                 stringsAsFactors = F)
-    )
-    # Use ggraph to create the circlepack plot.
-    demographics.circle.igraph = graph_from_data_frame(demographics.circle.edges,
-                                                       vertices = demographics.circle.vertices)
-    demographics.circle.ggraph = ggraph(demographics.circle.igraph,
-                                 layout = "circlepack", weight = "total.parts") +
-      geom_node_circle()
-    # Pull out x, y, and r for each category.
-    demographics.circle.facet.centers = demographics.circle.ggraph$data %>%
-      filter(as.character(name) == as.character(facet.name)) %>%
-      group_by(facet.theme) %>%
-      mutate(x.center = x, y.center = y,
-             r.center = max(r)) %>%
-      ungroup() %>%
-      dplyr::select(x.center, y.center, r.center, facet.name)
-    # Rescale x, y, and r for each non-root so that each theme (facet) is
-    # centered at (0, 0) and the same size.  Within a theme, sub-facets by
-    # gender are the same scale; therefore, facets with smaller counts will
-    # appear smaller.
-    demographics.circle.faceted.data = demographics.circle.ggraph$data %>%
-      rownames_to_column("rowname") %>%
-      inner_join(demographics.circle.facet.centers, by = c("facet.name")) %>%
-      mutate(x.faceted = (x - x.center) / r.center,
-             y.faceted = (y - y.center) / r.center,
-             r.faceted = r / r.center)
-    # Feed the rescaled dataset into geom_circle.
-    demographics.circle.facet.graph = ggplot(demographics.circle.faceted.data,
-                                             aes(x0 = x.faceted,
-                                                 y0 = y.faceted,
-                                                 r = r.faceted,
-                                                 fill = fill.to.plot,
-                                                 color = color.to.plot)) +
-      geom_circle() +
-      scale_fill_manual(values = sort(unique(as.character(demographics.circle.faceted.data$fill.to.plot)))) +
-      scale_color_manual(values = sort(unique(as.character(demographics.circle.faceted.data$color.to.plot)))) +
-      coord_equal() +
-      guides(fill = F, color = F, size = F) +
-      theme_void()
-    if(length(input$demographicsCircleThemePicker) > 0) {
-      if(length(input$demographicsCircleGenderPicker) > 0) {
-        demographics.circle.facet.graph = demographics.circle.facet.graph +
-          facet_grid(facet.theme ~ facet.gender) +
-          theme(strip.text.y = element_text(angle = -90))
-      } else {
-        demographics.circle.facet.graph = demographics.circle.facet.graph +
-          facet_wrap(~ facet.theme)
-      }
-    } else if(length(input$demographicsCircleGenderPicker) > 0) {
-      demographics.circle.facet.graph = demographics.circle.facet.graph +
-        facet_wrap(~ facet.gender)
-    }
-    if(length(input$demographicsCircleThemePicker) > 0 |
-       length(input$demographicsCircleGenderPicker) > 0) {
-      demographics.circle.facet.graph = demographics.circle.facet.graph +
-        theme(strip.text = element_text(size = 20, face = "bold"))
-    }
-    demographics.circle.facet.graph
+    circle.graph(temp.heads.df,
+                 facet.by.theme = length(selected.themes) > 0,
+                 facet.by.other = length(selected.genders) > 0)
   })
   
   # The actual demographics graph.
   output$demographicsCirclePlot <- renderPlot({
     demographics.circle.graph()
   })
-  demographics.circle.plot.width = reactive({
-    numeric.width = 700
-    if(length(input$demographicsCircleGenderPicker) > 0) {
-      numeric.width = length(input$demographicsCircleGenderPicker) * 300
-    } else if(length(input$demographicsCircleThemePicker) > 0) {
-      numeric.width = wrap_dims(length(input$demographicsCircleThemePicker))[2] * 300
-    }
-    return(paste(numeric.width, "px", sep = ""))
-  })
-  demographics.circle.plot.height = reactive({
-    numeric.height = 700
-    if(length(input$demographicsCircleGenderPicker > 0)) {
-      if(length(input$demographicsCircleThemePicker > 0)) {
-        numeric.height = length(input$demographicsCircleThemePicker) * 300
-      } else {
-        numeric.height = 300
-      }
-    } else if(length(input$demographicsCircleThemePicker) > 0) {
-      numeric.height = wrap_dims(length(input$demographicsCircleThemePicker))[1] * 300
-    }
-    return(paste(numeric.height, "px", sep = ""))
-  })
   output$demographicsCirclePlotUI <- renderUI({
     plotOutput("demographicsCirclePlot",
-               width = demographics.circle.plot.width(),
-               height = demographics.circle.plot.height(),
+               width = circle.plot.width(length(input$demographicsCircleThemePicker),
+                                         length(input$demographicsCircleGenderPicker)),
+               height = circle.plot.height(length(input$demographicsCircleThemePicker),
+                                           length(input$demographicsCircleGenderPicker)),
                hover = hoverOpts("demographicsCirclePlotHover",
                                    delay = 20, delayType = "debounce"))
   })
   
   # Tooltip for the demographics graph.
-  # https://gitlab.com/snippets/16220
   output$demographicsCircleHover = renderUI({
-    # Get the hover options.
-    hover = input$demographicsCirclePlotHover
-    # Find the data point that corresponds to the circle the mouse is hovering
-    # over.
-    if(!is.null(hover)) {
-      point = demographics.circle.graph()$data %>%
-        filter(leaf) %>%
-        filter(r.faceted >= (((x.faceted - hover$x) ^ 2) + ((y.faceted - hover$y) ^ 2)) ^ .5)
-      if(length(input$demographicsCircleGenderPicker) > 0) {
-        point = point %>%
-          filter(as.character(facet.gender) ==  hover$panelvar1)
-        if(length(input$demographicsCircleThemePicker) > 0) {
-          point = point %>%
-            filter(as.character(facet.theme) == hover$panelvar2)
-        }
-      } else if(length(input$demographicsCircleThemePicker) > 0) {
-        point = point %>%
-          filter(as.character(facet.theme) == hover$panelvar1)
-      }
-    } else {
-      return(NULL)
-    }
-    if(nrow(point) != 1) {
-      return(NULL)
-    }
-    # Calculate how far from the left and top the center of the circle is, as a
-    # percent of the total graph size.
-    left_pct = (point$x.faceted - hover$domain$left) / (hover$domain$right - hover$domain$left)
-    top_pct <- (hover$domain$top - point$y.faceted) / (hover$domain$top - hover$domain$bottom)
-    # Convert the percents into pixels.
-    left_px <- hover$range$left + left_pct * (hover$range$right - hover$range$left)
-    top_px <- hover$range$top + top_pct * (hover$range$bottom - hover$range$top)
-    # Set the style of the tooltip.
-    style = paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
-                   "left:", left_px, "px; top:", top_px, "px;")
-    # Create the actual tooltip as a wellPanel.
-    wellPanel(
-      style = style,
-      p(HTML(paste(paste("<b>", point$total.parts,
-                         " piece",
-                         ifelse(point$total.parts == 1, "", "s"),
-                         "</b>",
-                         sep = ""),
-                   as.character(point$part.name),
-                   sep = "<br/>")))
-    )
+    circle.tooltip(input$demographicsCirclePlotHover,
+                   demographics.circle.graph()$data,
+                   length(input$demographicsCircleThemePicker) > 0,
+                   length(input$demographicsCircleGenderPicker) > 0)
   })
   
   #############################################################################
