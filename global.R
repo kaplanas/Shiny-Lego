@@ -153,7 +153,8 @@ hair.df = lego.df %>%
          sub.sub.theme.name, num.parts, theme.num.parts)
 
 # Create another table with style keywords; a piece gets multiple rows if it's
-# associated with multiple styles.
+# associated with multiple styles.  Add a row with the style "Other" for pieces
+# that don't have any other style keywords.
 hair.style.words.df = data.frame(
   word = c("Long", "Bangs", "Ponytail", "Short", "Wavy", "Mid-length", "Bun",
            "Tousled", "Braid", "Straight", "Spiked", "Bushy",
@@ -176,6 +177,12 @@ hair.style.df = do.call(
         mutate(style = x[1])
     }
   )
+)
+hair.style.df = bind_rows(
+  hair.style.df,
+  hair.df %>%
+    anti_join(hair.style.df, by = c("part.id")) %>%
+    mutate(style = "Other")
 )
 
 # Update theme count table.
