@@ -43,25 +43,15 @@ shinyServer(function(input, output) {
   })
   
   # The actual demographics graph.
-  output$demographicsCirclePlot <- renderPlot({
+  output$demographicsCirclePlot = renderHighchart({
     demographics.circle.graph()
   })
-  output$demographicsCirclePlotUI <- renderUI({
-    plotOutput("demographicsCirclePlot",
-               width = circle.plot.width(length(input$demographicsCircleThemePicker),
-                                         length(input$demographicsCircleGenderPicker)),
-               height = circle.plot.height(length(input$demographicsCircleThemePicker),
-                                           length(input$demographicsCircleGenderPicker)),
-               hover = hoverOpts("demographicsCirclePlotHover",
-                                   delay = 20, delayType = "debounce"))
-  })
-  
-  # Tooltip for the demographics graph.
-  output$demographicsCircleHover = renderUI({
-    circle.tooltip(input$demographicsCirclePlotHover,
-                   demographics.circle.graph()$data,
-                   length(input$demographicsCircleThemePicker) > 0,
-                   length(input$demographicsCircleGenderPicker) > 0)
+  output$demographicsCirclePlotUI = renderUI({
+    highchartOutput("demographicsCirclePlot",
+                    height = circle.plot.height(length(input$demographicsCircleThemePicker),
+                                                length(input$demographicsCircleGenderPicker)),
+                    width = circle.plot.width(length(input$demographicsCircleThemePicker),
+                                              length(input$demographicsCircleGenderPicker)))
   })
   
   #############################################################################
@@ -166,59 +156,137 @@ shinyServer(function(input, output) {
   # Hair                                                                      #
   #############################################################################
   
-  # Create the hair circle graph.
-  hair.circle.graph = reactive({
-    # Store the themes and styles chosen by the user in variables with shorter
-    # names.
-    selected.themes = input$hairCircleThemePicker
-    selected.styles = input$hairCircleStylePicker
-    # Determine what we're going to facet by: theme, style, both, or neither.
-    # Filter if necessary.
-    if(length(selected.styles) > 0) {
-      temp.hair.df = hair.style.df %>%
-        filter(style %in% selected.styles) %>%
-        mutate(facet.name = style,
-               facet.theme = "",
-               facet.other = style)
-    } else {
-      temp.hair.df = hair.df %>%
-        mutate(facet.name = "",
-               facet.theme = "",
-               facet.other = "")
-    }
-    if(length(selected.themes) > 0) {
-      temp.hair.df = temp.hair.df %>%
-        filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes)) %>%
-        mutate(facet.name = ifelse(facet.name != "",
-                                   paste(facet.name, theme.name),
-                                   theme.name),
-               facet.theme = theme.name)
-    }
-    circle.graph(temp.hair.df,
-                 facet.by.theme = length(selected.themes) > 0,
-                 facet.by.other = length(selected.styles) > 0)
-  })
+  # # Create the hair sunburst graph.
+  # hair.sunburst.graph = reactive({
+  #   # Use the user selections to determine which levels to plot in which order.
+  #   style.row = list(
+  #     "level.column" = quo(style),
+  #     "level.fill" = quo("#FFFFFF"),
+  #     "level.color" = quo("#000000"),
+  #     "level.label" = quo(style)
+  #   )
+  #   color.row = list(
+  #     "level.column" = quo(color.hex),
+  #     "level.fill" = quo(color.hex),
+  #     "level.color" = quo("#000000"),
+  #     "level.label" = quo("")
+  #   )
+  #   if(input$hairSunburstOrderPicker == "style.first") {
+  #     levels.list = list(style.row, color.row)
+  #     levels.list[[1]]$columns.in.order = quos(style)
+  #     levels.list[[2]]$columns.in.order = quos(style, color.hex)
+  #   } else if(input$hairSunburstOrderPicker == "color.first") {
+  #     levels.list = list(color.row, style.row)
+  #     levels.list[[1]]$columns.in.order = quos(color.hex)
+  #     levels.list[[2]]$columns.in.order = quos(color.hex, style)
+  #   }
+  #   levels.list[[1]]$level.xmin = 0
+  #   levels.list[[1]]$level.xmax = 1
+  #   levels.list[[2]]$level.xmin = 1
+  #   levels.list[[2]]$level.xmax = 2
+  #   # Create the plot.
+  #   sunburst.plot(hair.style.df,
+  #                 levels.list,
+  #                 input$hairSunburstThemePicker)
+  # })
   
-  # The actual hair graph.
-  output$hairCirclePlot <- renderPlot({
-    hair.circle.graph()
-  })
-  output$hairCirclePlotUI <- renderUI({
-    plotOutput("hairCirclePlot",
-               width = circle.plot.width(length(input$hairCircleThemePicker),
-                                         length(input$hairCircleStylePicker)),
-               height = circle.plot.height(length(input$hairCircleThemePicker),
-                                           length(input$hairCircleStylePicker)),
-               hover = hoverOpts("hairCirclePlotHover",
-                                 delay = 20, delayType = "debounce"))
-  })
+  # # The actual hair graph.
+  # output$hairSunburstPlot <- renderD3tree({
+  #   # hair.sunburst.graph()
+  #   # library
+  #   
+  #   # dataset
+  #   group=c(rep("group-1",4),rep("group-2",2),rep("group-3",3))
+  #   subgroup=paste("subgroup" , c(1,2,3,4,1,2,1,2,3), sep="-")
+  #   value=c(13,5,22,12,11,7,3,1,23)
+  #   data=data.frame(group,subgroup,value)
+  #   
+  #   # basic treemap
+  #   p=treemap(data,
+  #             index=c("group","subgroup"),
+  #             vSize="value",
+  #             type="index"
+  #   )            
+  #   
+  #   # make it interactive ("rootname" becomes the title of the plot):
+  #   inter=d3tree( p ,  rootname = "General" )
+  #   inter
+  # })
+  # output$hairSunburstPlotUI <- renderUI({
+  #   plotOutput("hairSunburstPlot",
+  #              width = circle.plot.width(length(input$hairSunburstThemePicker),
+  #                                        length(input$hairSunburstStylePicker)),
+  #              height = circle.plot.height(length(input$hairSunburstThemePicker),
+  #                                          length(input$hairSunburstStylePicker)),
+  #              hover = hoverOpts("hairSunburstPlotHover",
+  #                                delay = 20, delayType = "debounce"))
+  # })
   
   # Tooltip for the hair graph.
-  output$hairCircleHover = renderUI({
-    circle.tooltip(input$hairCirclePlotHover,
-                   hair.circle.graph()$data,
-                   length(input$hairCircleThemePicker) > 0,
-                   length(input$hairCircleStylePicker) > 0)
-  })
+  # output$hairCircleHover = renderUI({
+  #   circle.tooltip(input$hairCirclePlotHover,
+  #                  hair.circle.graph()$data,
+  #                  length(input$hairCircleThemePicker) > 0,
+  #                  length(input$hairCircleStylePicker) > 0)
+  # })
+  
+  #############################################################################
+  # Clothing                                                                  #
+  #############################################################################
+  
+  # # Create the clothing circle graph.
+  # clothes.circle.graph = reactive({
+  #   # Store the themes and types chosen by the user in variables with shorter
+  #   # names.
+  #   selected.themes = input$clothesCircleThemePicker
+  #   selected.types = input$clothesCircleTypePicker
+  #   # Determine what we're going to facet by: theme, type, both, or neither.
+  #   # Filter if necessary.
+  #   if(length(selected.types) > 0) {
+  #     temp.clothes.df = clothes.type.df %>%
+  #       filter(type %in% selected.types) %>%
+  #       mutate(facet.name = type,
+  #              facet.theme = "",
+  #              facet.other = type)
+  #   } else {
+  #     temp.clothes.df = clothes.df %>%
+  #       mutate(facet.name = "",
+  #              facet.theme = "",
+  #              facet.other = "")
+  #   }
+  #   if(length(selected.themes) > 0) {
+  #     temp.clothes.df = temp.clothes.df %>%
+  #       filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes)) %>%
+  #       mutate(facet.name = ifelse(facet.name != "",
+  #                                  paste(facet.name, theme.name),
+  #                                  theme.name),
+  #              facet.theme = theme.name)
+  #   }
+  #   circle.graph(temp.clothes.df,
+  #                facet.by.theme = length(selected.themes) > 0,
+  #                facet.by.other = length(selected.types) > 0)
+  # })
+  # 
+  # # The actual clothing graph.
+  # output$clothesCirclePlot <- renderPlot({
+  #   clothes.circle.graph()
+  # })
+  # output$clothesCirclePlotUI <- renderUI({
+  #   plotOutput("clothesCirclePlot",
+  #              width = circle.plot.width(length(input$clothesCircleThemePicker),
+  #                                        length(input$clothesCircleTypePicker)),
+  #              height = circle.plot.height(length(input$clothesCircleThemePicker),
+  #                                          length(input$clothesCircleTypePicker)),
+  #              hover = hoverOpts("clothesCirclePlotHover",
+  #                                delay = 20, delayType = "debounce"))
+  # })
+  # 
+  # # Tooltip for the clothing graph.
+  # output$clothesCircleHover = renderUI({
+  #   circle.tooltip(input$clothesCirclePlotHover,
+  #                  clothes.circle.graph()$data,
+  #                  length(input$clothesCircleThemePicker) > 0,
+  #                  length(input$clothesCircleTypePicker) > 0)
+  # })
   
 })

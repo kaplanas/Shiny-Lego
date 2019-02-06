@@ -8,6 +8,9 @@ library(igraph)
 library(ggraph)
 library(scales)
 library(DT)
+library(treemap)
+library(highcharter)
+library(purrr)
 
 theme_set(theme_bw())
 
@@ -185,6 +188,42 @@ hair.style.df = bind_rows(
     mutate(style = "Other")
 )
 
+# Create another table with (garment) type keywords; a piece gets multiple rows
+# if it's associated with multiple types.  Add a row with the type "Other" for
+# pieces that don't have any other type keywords.
+clothes.type.words.df = data.frame(
+  word = c("Shirt", "Jacket", "Armor", "Vest", "Suit", "Robe", "Skirt",
+           "Overalls", "Sweater", "Uniform", "Trousers", "Coat", "Loincloth",
+           "Halter", "Shorts", "Breastplate", "Blouse", "Corset", "Sweatshirt",
+           "T-shirt", "Apron", "Jumpsuit", "Bikini", "Spacesuit", "Wetsuit",
+           "Leotard", "Swimsuit", "Blazer", "Waistcoat", "Tuxedo", "Jeans",
+           "Kimono", "Nightgown", "Pajama"),
+  regex = c("shirt", "Jacket", "armou?r", "vest", "\\bsuit", "robe", "skirt",
+            "overalls|dungarees", "sweater", "uniform", "trousers",
+            "coats?\\b", "loincloth", "halter", "shorts", "breastplate",
+            "blouse", "corset", "sweatshirt", "tshirt", "apron", "jumpsuit",
+            "bikini", "spacesuit", "wetsuit", "leotard", "swimsuit", "blazer",
+            "waistcoat", "tuxedo", "jeans", "kimono", "nightgown", "pajama")
+)
+clothes.type.df = do.call(
+  "bind_rows",
+  apply(
+    clothes.type.words.df, 1,
+    function(x) {
+      clothes.df %>%
+        filter(grepl(x[2], gsub("[^A-Za-z0-9]", "", tolower(part.name)))) %>%
+        mutate(type = x[1])
+    }
+  )
+)
+clothes.type.df = bind_rows(
+  clothes.type.df,
+  clothes.df %>%
+    anti_join(clothes.type.df, by = c("part.id")) %>%
+    mutate(type = paste("Other",
+                        ifelse(upper.lower == "upper", "Upper", "Lower")))
+)
+
 # Update theme count table.
 theme.counts.df = theme.counts.df %>%
   left_join(heads.df %>%
@@ -196,6 +235,11 @@ theme.counts.df = theme.counts.df %>%
               mutate(total.hair = theme.num.parts) %>%
               select(theme.name, total.hair) %>%
               distinct(),
+            by = c("theme.name")) %>%
+  left_join(clothes.df %>%
+              mutate(total.clothes = theme.num.parts) %>%
+              select(theme.name, total.clothes) %>%
+              distinct(),
             by = c("theme.name"))
 
 # Function to create a theme picker input.  We will need several of these.
@@ -203,7 +247,7 @@ theme.picker.input = function(input.id, column.with.counts) {
   temp.theme.counts.df = theme.counts.df
   temp.theme.counts.df[,"count.to.display"] = theme.counts.df[,column.with.counts]
   pickerInput(
-    input.id, "Filter to specific themes:",
+    input.id, "Filter to one or more themes:",
     choices = data.frame(
       temp.theme.counts.df %>%
         filter(count.to.display > 0) %>%
@@ -214,9 +258,16 @@ theme.picker.input = function(input.id, column.with.counts) {
   )
 }
 
+# Height and width of (1) an unfaceted circle plot, or (2) each facet of a
+# faceted circle plot.
+circle.plot.dims = list(height = 700, width = 700)
+circle.plot.facet.dims = list(height = 300, width = 300)
+
 # Function to create a (possibly faceted) circle graph.  Assumes that the first
 # input is a dataframe with columns "facet.name", "facet.theme", "facet.other",
-# "color.hex", "part.id", "part.name", "num.parts".
+# "color.hex", "part.id", "part.name", "num.parts".  General strategy: use
+# ggraph to pack the circles and determine their position/size, and then feed
+# the coordinates and size of each circle into Highcharts to display the graph.
 circle.graph = function(data.df, facet.by.theme, facet.by.other) {
   # Create a dataframe of edges.
   circle.edges = bind_rows(
@@ -284,130 +335,148 @@ circle.graph = function(data.df, facet.by.theme, facet.by.other) {
   circle.ggraph = ggraph(circle.igraph,
                          layout = "circlepack", weight = "total.parts") +
     geom_node_circle()
-  # Pull out x, y, and r for each category.
+  # Pull out x, y, and r for each category, so that we can position and resize
+  # the facets appropriately.
   circle.facet.centers = circle.ggraph$data %>%
     filter(as.character(name) == as.character(facet.name)) %>%
     group_by(facet.theme) %>%
     mutate(x.center = x, y.center = y,
            r.center = max(r)) %>%
-    ungroup() %>%
-    dplyr::select(x.center, y.center, r.center, facet.name)
+    ungroup()
+  # Determine what the x and y of the category "should" be in order to simulate
+  # facets.  Also get the range of each axis.
+  # We have to simulate the facets; we can't use hw_grid from the highcharter
+  # package because, as far as I can tell, that function is incompatible with
+  # setting the width and height of the plot in highchartOutput, which is the
+  # only way I can actually get explicit width and height to work in Shiny.
+  # And we have to set the width and height explicitly in order to "square up"
+  # the plot, because Highcharts doesn't have the equivalent of ggplot's
+  # coord_equal.
+  wrap.dims = wrap_dims(length(unique(circle.facet.centers$facet.name)))
+  if(facet.by.theme & facet.by.other) {
+    circle.facet.centers = circle.facet.centers %>%
+      mutate(facet.index = NA,
+             facet.index.x = dense_rank(facet.other),
+             facet.index.y = -1 * dense_rank(facet.theme))
+    circle.xmax = length(unique(circle.ggraph$data$facet.other[!is.na(circle.ggraph$data$facet.other)])) + 0.5
+    circle.xmin = 0.5
+    circle.ymax = -0.5
+    circle.ymin = -1 * (length(unique(circle.ggraph$data$facet.theme[!is.na(circle.ggraph$data$facet.theme)])) + 0.5)
+  } else {
+    circle.facet.centers = circle.facet.centers %>%
+      mutate(facet.index = row_number(facet.name)) %>%
+      mutate(facet.index.y = ceiling(facet.index / wrap.dims[2]),
+             facet.index.x = ((facet.index - 1) %% wrap.dims[2]) + 1) %>%
+      mutate(facet.index.y = -1 * facet.index.y)
+    circle.xmax = wrap.dims[2] + 0.5
+    circle.xmin = 0.5
+    circle.ymax = -0.5
+    circle.ymin = -1 * (wrap.dims[1] + 0.5)
+  }
+  circle.facet.centers = circle.facet.centers %>%
+    dplyr::select(x.center, y.center, r.center, facet.name, facet.index,
+                  facet.index.x, facet.index.y)
+  # If we're faceting by anything, create an annotation for each facet.
+  circle.facet.labels = list()
+  if(facet.by.theme | facet.by.other) {
+    circle.facet.labels = apply(
+      circle.facet.centers, 1,
+      function(x) {
+        list(
+          labels = list(
+            list(
+              point = list(
+                x = x[["facet.index.x"]],
+                y = as.numeric(x[["facet.index.y"]]) + 0.4,
+                xAxis = 0, yAxis = 0
+              ),
+              text = x[["facet.name"]]
+            )
+          )
+        )
+      }
+    )
+  }
   # Rescale x, y, and r for each non-root so that each theme (facet) is
-  # centered at (0, 0) and the same size.  Within a theme, sub-facets are the
-  # same scale; therefore, facets with smaller counts will appear smaller.
+  # centered at the correct (faceted) location and the same size.  Within a
+  # theme, sub-facets (e.g., by gender) are the same scale; therefore,
+  # sub-facets with smaller counts will have smaller circles.
   circle.faceted.data = circle.ggraph$data %>%
     rownames_to_column("rowname") %>%
     inner_join(circle.facet.centers, by = c("facet.name")) %>%
-    mutate(x.faceted = (x - x.center) / r.center,
-           y.faceted = (y - y.center) / r.center,
-           r.faceted = r / r.center)
-  # Feed the rescaled dataset into geom_circle.
-  circle.facet.graph = ggplot(circle.faceted.data,
-                              aes(x0 = x.faceted,
-                                  y0 = y.faceted,
-                                  r = r.faceted,
-                                  fill = fill.to.plot,
-                                  color = color.to.plot)) +
-    geom_circle() +
-    scale_fill_manual(values = sort(unique(as.character(circle.faceted.data$fill.to.plot)))) +
-    scale_color_manual(values = sort(unique(as.character(circle.faceted.data$color.to.plot)))) +
-    coord_equal() +
-    guides(fill = F, color = F, size = F) +
-    theme_void()
-  if(facet.by.theme) {
-    if(facet.by.other) {
-      circle.facet.graph = circle.facet.graph +
-        facet_grid(facet.theme ~ facet.other) +
-        theme(strip.text.y = element_text(angle = -90))
-    } else {
-      circle.facet.graph = circle.facet.graph +
-        facet_wrap(~ facet.theme)
-    }
-  } else if(facet.by.other) {
-    circle.facet.graph = circle.facet.graph +
-      facet_wrap(~ facet.other)
-  }
+    mutate(x.faceted = (((x - x.center) / r.center) / 2) + facet.index.x,
+           y.faceted = (-1 * (((y - y.center) / r.center) / 2)) + facet.index.y,
+           r.faceted = (r / r.center) / 2) %>%
+    mutate(total.parts.scaled = pi * (r.faceted ^ 2)) %>%
+    filter(leaf)
+  # Determine what the diameter of the largest circle should be, in pixels.
+  max.diameter = 2 * max(circle.faceted.data$r.faceted)
   if(facet.by.theme | facet.by.other) {
-    circle.facet.graph = circle.facet.graph +
-      theme(strip.text = element_text(size = 20, face = "bold"))
+    max.diameter = max.diameter * min(circle.plot.facet.dims$height,
+                                      circle.plot.facet.dims$width)
+  } else {
+    max.diameter = max.diameter * min(circle.plot.dims$height,
+                                      circle.plot.dims$width)
   }
+  # Feed the data into Highcharts.
+  circle.faceted.data = circle.faceted.data %>%
+    mutate(part_name = part.name,
+           total_parts = total.parts)
+  circle.facet.graph = hchart(circle.faceted.data,
+                              "bubble",
+                              hcaes(x.faceted,
+                                    y.faceted,
+                                    z = total.parts.scaled,
+                                    color = fill.to.plot),
+                              minSize = 0,
+                              maxSize = max.diameter,
+                              zMin = 0,
+                              zMax = max(circle.faceted.data$total.parts.scaled) * 1.2,
+                              marker = list(lineColor = "#000000",
+                                            lineWidth = 0.5,
+                                            fillOpacity = 1)) %>%
+    hc_chart(margin = 0) %>%
+    hc_xAxis(max = circle.xmax,
+             maxPadding = 0,
+             min = circle.xmin,
+             minPadding = 0) %>%
+    hc_yAxis(max = circle.ymax,
+             maxPadding = 0,
+             min = circle.ymin,
+             minPadding = 0) %>%
+    hc_tooltip(borderWidth = 4,
+               headerFormat = "",
+               pointFormat = "<span style=\"color:{point.color}\">\u25CF</span>\u00A0<span><b>Total pieces: {point.total_parts}</b></span><br/>{point.part_name}") %>%
+    hc_add_theme(hc_theme_null()) %>%
+    hc_add_annotations(circle.facet.labels)
   circle.facet.graph
 }
 
 # Functions to determine what the height and width of a circle plot should be,
 # given whether and how it's faceted.
 circle.plot.width = function(num.themes, num.other) {
-  numeric.width = 700
+  numeric.width = circle.plot.dims$width
   if(num.other > 0) {
     if(num.themes > 0) {
-      numeric.width = num.other * 300
+      numeric.width = num.other * circle.plot.facet.dims$width
     } else {
-      numeric.width = wrap_dims(num.other)[2] * 300
+      numeric.width = wrap_dims(num.other)[2] * circle.plot.facet.dims$width
     }
   } else if(num.themes > 0) {
-    numeric.width = wrap_dims(num.themes)[2] * 300
+    numeric.width = wrap_dims(num.themes)[2] * circle.plot.facet.dims$width
   }
   return(paste(numeric.width, "px", sep = ""))
 }
 circle.plot.height = function(num.themes, num.other) {
-  numeric.height = 700
+  numeric.height = circle.plot.dims$height
   if(num.other > 0) {
     if(num.themes > 0) {
-      numeric.height = num.themes * 300
+      numeric.height = num.themes * circle.plot.facet.dims$height
     } else {
-      numeric.height = wrap_dims(num.other)[1] * 300
+      numeric.height = wrap_dims(num.other)[1] * circle.plot.facet.dims$height
     }
   } else if(num.themes > 0) {
-    numeric.height = wrap_dims(num.themes)[1] * 300
+    numeric.height = wrap_dims(num.themes)[1] * circle.plot.facet.dims$height
   }
   return(paste(numeric.height, "px", sep = ""))
-}
-
-# Function to create a tooltip for a circle graph.
-# https://gitlab.com/snippets/16220
-circle.tooltip = function(hover, circle.graph.data.df, facet.by.theme, facet.by.other) {
-  # Find the data point that corresponds to the circle the mouse is hovering
-  # over.
-  if(!is.null(hover)) {
-    point = circle.graph.data.df %>%
-      filter(leaf) %>%
-      filter(r.faceted >= (((x.faceted - hover$x) ^ 2) + ((y.faceted - hover$y) ^ 2)) ^ .5)
-    if(facet.by.other) {
-      point = point %>%
-        filter(as.character(facet.other) ==  hover$panelvar1)
-      if(facet.by.theme) {
-        point = point %>%
-          filter(as.character(facet.theme) == hover$panelvar2)
-      }
-    } else if(facet.by.theme) {
-      point = point %>%
-        filter(as.character(facet.theme) == hover$panelvar1)
-    }
-  } else {
-    return(NULL)
-  }
-  if(nrow(point) != 1) {
-    return(NULL)
-  }
-  # Calculate how far from the left and top the center of the circle is, as a
-  # percent of the total graph size.
-  left_pct = (point$x.faceted - hover$domain$left) / (hover$domain$right - hover$domain$left)
-  top_pct <- (hover$domain$top - point$y.faceted) / (hover$domain$top - hover$domain$bottom)
-  # Convert the percents into pixels.
-  left_px <- hover$range$left + left_pct * (hover$range$right - hover$range$left)
-  top_px <- hover$range$top + top_pct * (hover$range$bottom - hover$range$top)
-  # Set the style of the tooltip.
-  style = paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
-                 "left:", left_px, "px; top:", top_px, "px;")
-  # Create the actual tooltip as a wellPanel.
-  wellPanel(
-    style = style,
-    p(HTML(paste(paste("<b>", point$total.parts,
-                       " piece",
-                       ifelse(point$total.parts == 1, "", "s"),
-                       "</b>",
-                       sep = ""),
-                 as.character(point$part.name),
-                 sep = "<br/>")))
-  )
 }

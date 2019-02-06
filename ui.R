@@ -25,7 +25,7 @@ shinyUI(navbarPage(
         sidebarPanel(
           theme.picker.input("demographicsCircleThemePicker", "total.heads"),
           pickerInput(
-            "demographicsCircleGenderPicker", "Filter to specific genders:",
+            "demographicsCircleGenderPicker", "Filter to one or more genders:",
             choices = sort(unique(heads.df$gender)),
             options = list(`actions-box` = T),
             multiple = T
@@ -44,8 +44,7 @@ shinyUI(navbarPage(
         # Main panel with plot.
         mainPanel(div(
           style = "position:relative",
-          uiOutput("demographicsCirclePlotUI"),
-          uiOutput("demographicsCircleHover")
+          uiOutput("demographicsCirclePlotUI")
         ))
       
       ),
@@ -76,7 +75,7 @@ shinyUI(navbarPage(
         # Main panel with plot.
         mainPanel(
           plotOutput("demographicsDiversity",
-                     width = "700px", height = "1500px")
+                     width = "1000px", height = "2000px")
         )
         
       ),
@@ -90,7 +89,7 @@ shinyUI(navbarPage(
         sidebarPanel(
           theme.picker.input("demographicsSetThemePicker", "total.heads"),
           pickerInput(
-            "demographicsSetEthnicityPicker", "Filter to specific ethnicities:",
+            "demographicsSetEthnicityPicker", "Filter to one or more ethnicities:",
             choices = sort(unique(heads.df$color.name)),
             choicesOpt = list(content =
                                 sapply(sort(unique(heads.df$color.name)),
@@ -114,7 +113,7 @@ shinyUI(navbarPage(
             multiple = T
           ),
           pickerInput(
-            "demographicsSetGenderPicker", "Filter to specific genders:",
+            "demographicsSetGenderPicker", "Filter to one or more genders:",
             choices = sort(unique(heads.df$gender)),
             options = list(`actions-box` = T),
             multiple = T
@@ -130,50 +129,75 @@ shinyUI(navbarPage(
     
     )
     
-  ),
+  )#,
   
-  # Fashion
-  tabPanel(
-    
-    "Fashion",
-    
-    # Make sure the cursor has the default shape, even when using tooltips
-    tags$head(tags$style(HTML("#hairCirclePlot { cursor: default; }"))),
-    
-    # One tab for each plot/table.
-    tabsetPanel(
-      
-      type = "tabs",
-      
-      # Circle-packing plot of hair style and color.
-      tabPanel(
-        
-        "Hair",
-        
-        # Sidebar panel for controls.
-        sidebarPanel(
-          theme.picker.input("hairCircleThemePicker", "total.hair"),
-          pickerInput(
-            "hairCircleStylePicker", "Filter to specific styles:",
-            choices = sort(unique(hair.style.df$style)),
-            multiple = T
-          ),
-          tags$p("Each circle represents a hair piece for a minifigure or minidoll.  The area of the circle is proportional to the number of pieces across all sets.  Use the filters to facet by theme and/or style.  Hover over a circle to see the part name."),
-          tags$p("The color of the circle is the color of the hair."),
-          tags$p("Style is inferred from keywords in the part name.  A single part may have multiple styles; when you facet by style, a part will appearh in <i>all</i> relevant facets.")
-        ),
-        
-        # Main panel with plot.
-        mainPanel(div(
-          style = "position:relative",
-          uiOutput("hairCirclePlotUI"),
-          uiOutput("hairCircleHover")
-        ))
-        
-      )
-      
-    )
-    
-  )
+  # # Fashion
+  # tabPanel(
+  #   
+  #   "Fashion",
+  #   
+  #   # Make sure the cursor has the default shape, even when using tooltips
+  #   tags$head(tags$style(HTML("#hairCirclePlot { cursor: default; }"))),
+  #   tags$head(tags$style(HTML("#clothesCirclePlot { cursor: default; }"))),
+  #   
+  #   # One tab for each plot/table.
+  #   tabsetPanel(
+  #     
+  #     type = "tabs",
+  #     
+  #     # Circle-packing plot of hair style and color.
+  #     tabPanel(
+  # 
+  #       "Hair",
+  # 
+  #       # Sidebar panel for controls.
+  #       sidebarPanel(
+  #         theme.picker.input("hairSunburstThemePicker", "total.hair"),
+  #         selectInput(
+  #           "hairSunburstOrderPicker", "Adjust order of levels:",
+  #           choices = list("Style, then color" = "style.first",
+  #                          "Color, then style" = "color.first")
+  #         ),
+  #         checkboxInput(
+  #           "hairSunburstPiecePicker", "Show individual pieces"
+  #         ),
+  #         tags$p(HTML("Style is inferred from keywords in the part name.  A single part may have multiple styles; when you facet by style, a part will appearh in <i>all</i> relevant facets."))
+  #       ),
+  #       
+  #       # Main panel with plot.
+  #       mainPanel(div(
+  #         style = "position:relative",
+  #         uiOutput("hairCirclePlotUI")
+  #       ))
+  # 
+  #     ),
+  #     
+  #     # Circle-packing plot of clothing type and color.
+  #     tabPanel(
+  #       
+  #       "Clothing",
+  #       
+  #       # Sidebar panel for controls.
+  #       sidebarPanel(
+  #         theme.picker.input("clothesCircleThemePicker", "total.clothes"),
+  #         pickerInput(
+  #           "clothesCircleTypePicker", "Filter to specific types:",
+  #           choices = sort(unique(clothes.type.df$type)),
+  #           multiple = T
+  #         )
+  #       ),
+  #       
+  #       # Main panel with plot.
+  #       mainPanel(div(
+  #         style = "position:relative",
+  #         uiOutput("clothesCirclePlotUI"),
+  #         uiOutput("clothesCircleHover")
+  #       ))
+  #       
+  #     )
+  #     
+  #   )
+  #   
+  # )
   
 ))
