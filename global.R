@@ -480,3 +480,84 @@ circle.plot.height = function(num.themes, num.other) {
   }
   return(paste(numeric.height, "px", sep = ""))
 }
+
+# Function to create a treemap.
+treemap.graph = function(data.df, label.rules) {
+  # Create a dataframe that encodes the tree structure for Highcharts.
+  treemap.df = bind_rows(
+    # Add one row for each top-level category.
+    data.df %>%
+      group_by(id.level.1, name.level.1, color.level.1, opacity.level.1) %>%
+      summarize(total.parts = sum(num.parts)) %>%
+      ungroup() %>%
+      mutate(name = name.level.1,
+             id = id.level.1,
+             level = 1,
+             value = total.parts,
+             valuecolor = total.parts,
+             color = color.level.1,
+             opacity = opacity.level.1,
+             parent = NA,
+             index.1 = NA,
+             index.2 = NA) %>%
+      select(name, id, level, value, valuecolor, color, parent, index.1,
+             index.2, opacity),
+    # Add one row for each second-level category.
+    data.df %>%
+      group_by(id.level.1, id.level.2, name.level.2, color.level.2,
+               opacity.level.2) %>%
+      summarize(total.parts = sum(num.parts)) %>%
+      ungroup() %>%
+      mutate(name = name.level.2,
+             id = id.level.2,
+             level = 2,
+             value = total.parts,
+             valuecolor = total.parts,
+             color = color.level.2,
+             opacity = opacity.level.2,
+             parent = id.level.1,
+             index.1 = id.level.1,
+             index.2 = NA) %>%
+      select(name, id, level, value, valuecolor, color, parent, index.1,
+             index.2, opacity)
+  )
+  # Add one row for each third-level category, if any.
+  if(is.element("id.level.3", colnames(data.df))) {
+    treemap.df = bind_rows(
+      treemap.df,
+      data.df %>%
+        group_by(id.level.1, id.level.2, id.level.3, name.level.3,
+                 color.level.3) %>%
+        summarize(total.parts = sum(num.parts)) %>%
+        ungroup() %>%
+        mutate(name = name.level.3,
+               id = id.level.3,
+               level = 3,
+               value = total.parts,
+               valuecolor = total.parts,
+               color = color.level.3,
+               parent = id.level.2,
+               index.1 = id.level.2,
+               index.2 = id.level.3,
+               index.3 = NA) %>%
+        select(name, id, level, value, valuecolor, color, parent, index.1,
+               index.2, index.3)
+    )
+  }
+  # Make the treemap.
+  highchart() %>%
+    hc_add_series(data = list_parse(treemap.df),
+                  type = "treemap",
+                  layoutAlgorithm = "squarified",
+                  levelIsConstant = T,
+                  allowDrillToNode = T,
+                  levels = list(
+                    list(level = 1,
+                         dataLabels = list(enabled = label.rules[["1"]][["enabled"]]),
+                         borderWidth = 5),
+                    list(level = 2,
+                         dataLabels = list(enabled = label.rules[["2"]][["enabled"]])),
+                    list(level = 3,
+                         dataLabels = list(enabled = label.rules[["3"]][["enabled"]]))
+                  ))
+}

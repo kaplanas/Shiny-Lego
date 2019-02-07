@@ -172,79 +172,63 @@ shinyServer(function(input, output) {
   # Hair                                                                      #
   #############################################################################
   
-  # # Create the hair sunburst graph.
-  # hair.sunburst.graph = reactive({
-  #   # Use the user selections to determine which levels to plot in which order.
-  #   style.row = list(
-  #     "level.column" = quo(style),
-  #     "level.fill" = quo("#FFFFFF"),
-  #     "level.color" = quo("#000000"),
-  #     "level.label" = quo(style)
-  #   )
-  #   color.row = list(
-  #     "level.column" = quo(color.hex),
-  #     "level.fill" = quo(color.hex),
-  #     "level.color" = quo("#000000"),
-  #     "level.label" = quo("")
-  #   )
-  #   if(input$hairSunburstOrderPicker == "style.first") {
-  #     levels.list = list(style.row, color.row)
-  #     levels.list[[1]]$columns.in.order = quos(style)
-  #     levels.list[[2]]$columns.in.order = quos(style, color.hex)
-  #   } else if(input$hairSunburstOrderPicker == "color.first") {
-  #     levels.list = list(color.row, style.row)
-  #     levels.list[[1]]$columns.in.order = quos(color.hex)
-  #     levels.list[[2]]$columns.in.order = quos(color.hex, style)
-  #   }
-  #   levels.list[[1]]$level.xmin = 0
-  #   levels.list[[1]]$level.xmax = 1
-  #   levels.list[[2]]$level.xmin = 1
-  #   levels.list[[2]]$level.xmax = 2
-  #   # Create the plot.
-  #   sunburst.plot(hair.style.df,
-  #                 levels.list,
-  #                 input$hairSunburstThemePicker)
-  # })
+  # Create the hair treemap.
+  hair.treemap = reactive({
+    # Store the themes chosen by the user in a variable.
+    selected.themes = input$hairTreemapThemePicker
+    # Filter on theme, if specified by the user.
+    temp.hair.df = hair.style.df
+    if(length(selected.themes) > 0) {
+      temp.hair.df = temp.hair.df %>%
+        filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes))
+    }
+    # Use the user selections to determine which levels to plot in which order.
+    label.rules = list(
+      "1" = list(enabled = T),
+      "2" = list(enabled = T),
+      "3" = list(enabled = F)
+    )
+    if(input$hairTreemapOrderPicker == "style.first") {
+      temp.hair.df = temp.hair.df %>%
+        mutate(id.level.1 = tolower(style),
+               name.level.1 = style,
+               color.level.1 = NA,
+               opacity.level.1 = 0,
+               id.level.2 = tolower(paste(style, color.hex)),
+               name.level.2 = color.name,
+               color.level.2 = color.hex,
+               opacity.level.2 = 1)
+      label.rules[["2"]][["enabled"]] = F
+    } else if(input$hairTreemapOrderPicker == "color.first") {
+      temp.hair.df = temp.hair.df %>%
+        mutate(id.level.1 = tolower(color.hex),
+               name.level.1 = color.name,
+               color.level.1 = color.hex,
+               opacity.level.1 = 1,
+               id.level.2 = tolower(paste(color.hex, style)),
+               name.level.2 = style,
+               color.level.2 = color.hex,
+               opacity.level.2 = 0)
+      label.rules[["1"]][["enabled"]] = F
+    }
+    # Add a third level for pieces.
+    temp.hair.df = temp.hair.df %>%
+      mutate(id.level.3 = tolower(paste(id.level.2, part.name)),
+             name.level.3 = part.name,
+             color.level.3 = color.hex)
+    # Create the plot.
+    treemap.graph(temp.hair.df, label.rules)
+  })
   
-  # # The actual hair graph.
-  # output$hairSunburstPlot <- renderD3tree({
-  #   # hair.sunburst.graph()
-  #   # library
-  #   
-  #   # dataset
-  #   group=c(rep("group-1",4),rep("group-2",2),rep("group-3",3))
-  #   subgroup=paste("subgroup" , c(1,2,3,4,1,2,1,2,3), sep="-")
-  #   value=c(13,5,22,12,11,7,3,1,23)
-  #   data=data.frame(group,subgroup,value)
-  #   
-  #   # basic treemap
-  #   p=treemap(data,
-  #             index=c("group","subgroup"),
-  #             vSize="value",
-  #             type="index"
-  #   )            
-  #   
-  #   # make it interactive ("rootname" becomes the title of the plot):
-  #   inter=d3tree( p ,  rootname = "General" )
-  #   inter
-  # })
-  # output$hairSunburstPlotUI <- renderUI({
-  #   plotOutput("hairSunburstPlot",
-  #              width = circle.plot.width(length(input$hairSunburstThemePicker),
-  #                                        length(input$hairSunburstStylePicker)),
-  #              height = circle.plot.height(length(input$hairSunburstThemePicker),
-  #                                          length(input$hairSunburstStylePicker)),
-  #              hover = hoverOpts("hairSunburstPlotHover",
-  #                                delay = 20, delayType = "debounce"))
-  # })
-  
-  # Tooltip for the hair graph.
-  # output$hairCircleHover = renderUI({
-  #   circle.tooltip(input$hairCirclePlotHover,
-  #                  hair.circle.graph()$data,
-  #                  length(input$hairCircleThemePicker) > 0,
-  #                  length(input$hairCircleStylePicker) > 0)
-  # })
+  # The actual hair graph.
+  output$hairTreemap = renderHighchart({
+    hair.treemap()
+  })
+  output$hairTreemapUI = renderUI({
+    highchartOutput("hairTreemap",
+                    height = 700,
+                    width = 700)
+  })
   
   #############################################################################
   # Clothing                                                                  #

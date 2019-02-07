@@ -8,9 +8,6 @@ shinyUI(navbarPage(
     
     "Demographics",
     
-    # Make sure the cursor has the default shape, even when using tooltips
-    tags$head(tags$style(HTML("#demographicsCirclePlot { cursor: default; }"))),
-    
     # One tab for each plot/table.
     tabsetPanel(
       
@@ -129,49 +126,42 @@ shinyUI(navbarPage(
     
     )
     
-  )#,
+  ),
   
-  # # Fashion
-  # tabPanel(
-  #   
-  #   "Fashion",
-  #   
-  #   # Make sure the cursor has the default shape, even when using tooltips
-  #   tags$head(tags$style(HTML("#hairCirclePlot { cursor: default; }"))),
-  #   tags$head(tags$style(HTML("#clothesCirclePlot { cursor: default; }"))),
-  #   
-  #   # One tab for each plot/table.
-  #   tabsetPanel(
-  #     
-  #     type = "tabs",
-  #     
-  #     # Circle-packing plot of hair style and color.
-  #     tabPanel(
-  # 
-  #       "Hair",
-  # 
-  #       # Sidebar panel for controls.
-  #       sidebarPanel(
-  #         theme.picker.input("hairSunburstThemePicker", "total.hair"),
-  #         selectInput(
-  #           "hairSunburstOrderPicker", "Adjust order of levels:",
-  #           choices = list("Style, then color" = "style.first",
-  #                          "Color, then style" = "color.first")
-  #         ),
-  #         checkboxInput(
-  #           "hairSunburstPiecePicker", "Show individual pieces"
-  #         ),
-  #         tags$p(HTML("Style is inferred from keywords in the part name.  A single part may have multiple styles; when you facet by style, a part will appearh in <i>all</i> relevant facets."))
-  #       ),
-  #       
-  #       # Main panel with plot.
-  #       mainPanel(div(
-  #         style = "position:relative",
-  #         uiOutput("hairCirclePlotUI")
-  #       ))
-  # 
-  #     ),
-  #     
+  # Fashion
+  tabPanel(
+
+    "Fashion",
+
+    # One tab for each plot/table.
+    tabsetPanel(
+
+      type = "tabs",
+
+      # Treemap of hair style and color.
+      tabPanel(
+
+        "Hair",
+
+        # Sidebar panel for controls.
+        sidebarPanel(
+          theme.picker.input("hairTreemapThemePicker", "total.hair"),
+          selectInput(
+            "hairTreemapOrderPicker", "Adjust order of levels:",
+            choices = list("Style, then color" = "style.first",
+                           "Color, then style" = "color.first")
+          ),
+          tags$p(HTML("Style is inferred from keywords in the part name.  A single part may have multiple styles; when you facet by style, a part will appear in <i>all</i> relevant facets."))
+        ),
+
+        # Main panel with plot.
+        mainPanel(div(
+          style = "position:relative",
+          uiOutput("hairTreemapUI")
+        ))
+
+      )#,
+
   #     # Circle-packing plot of clothing type and color.
   #     tabPanel(
   #       
@@ -193,11 +183,11 @@ shinyUI(navbarPage(
   #         uiOutput("clothesCirclePlotUI"),
   #         uiOutput("clothesCircleHover")
   #       ))
-  #       
-  #     )
-  #     
-  #   )
-  #   
-  # )
+  # 
+  #    )
+
+    )
+
+  )
   
 ))
