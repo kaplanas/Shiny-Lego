@@ -58,7 +58,7 @@ shinyServer(function(input, output) {
   # Ethnic diversity and gender parity                                        #
   #############################################################################
   
-  output$demographicsDiversity = renderPlot({
+  output$demographicsDiversity = renderHighchart({
     # Get one row per theme, with the relevant columns.
     temp.heads.df = heads.df %>%
       dplyr::select(theme.name, theme.num.parts, theme.ethnic.diversity,
@@ -73,31 +73,47 @@ shinyServer(function(input, output) {
       temp.heads.df = temp.heads.df %>%
         mutate(measure = theme.pct.female)
     }
+    temp.heads.df = temp.heads.df %>%
+      filter(!is.na(measure))
     # Sort by the column specified by the user.
     if(input$demographicsOrderPicker == "Measure") {
       temp.heads.df = temp.heads.df %>%
-        arrange(measure, desc(theme.name))
+        arrange(desc(measure), theme.name)
     } else if(input$demographicsOrderPicker == "Number of pieces") {
       temp.heads.df  = temp.heads.df %>%
-        arrange(theme.num.parts, desc(theme.name))
+        arrange(desc(theme.num.parts), theme.name)
     } else if(input$demographicsOrderPicker == "Theme name") {
       temp.heads.df = temp.heads.df %>%
-        arrange(desc(theme.name))
+        arrange(theme.name)
     }
     temp.heads.df$theme.name = factor(temp.heads.df$theme.name,
                                       levels = temp.heads.df$theme.name)
+    # Get log num parts, and the maximum over the dataset.
+    temp.heads.df = temp.heads.df %>%
+      mutate(theme.num.parts.col = log(theme.num.parts) / max(log(theme.num.parts)))
+    # Set the format for the tooltip.
+    point.format = paste(
+      " ({point.num_pieces} pieces)</span><br/><span>",
+      input$demographicsMeasurePicker,
+      ":\u00A0{point.y}</span>",
+      sep = ""
+    )
     # Make the plot.
-    temp.heads.df %>%
-      filter(!is.na(measure)) %>%
-      ggplot(aes(x = theme.name, y = measure, fill = theme.num.parts)) +
-      geom_bar(stat = "identity", color = "black", size = 0.4) +
-      scale_x_discrete("") +
-      scale_y_continuous(input$demographicsMeasurePicker,
-                         sec.axis = dup_axis()) +
-      scale_fill_continuous("Number of pieces", trans = "log",
-                            breaks = c(2, 20, 200, 2000),
-                            high = "black", low = "white") +
-      coord_flip()
+    highchart() %>%
+      hc_chart(type = "bar") %>%
+      hc_xAxis(categories = temp.heads.df$theme.name) %>%
+      hc_add_series(pointPadding = 0,
+                    data = temp.heads.df %>%
+                      mutate(y = measure,
+                             num_pieces = theme.num.parts),
+                    colorByPoint = T,
+                    colors = rgb(colorRamp(c("white", "black"))(temp.heads.df$theme.num.parts.col),
+                                 maxColorValue = 255),
+                    borderColor = "#000000") %>%
+      hc_tooltip(headerFormat = "<span><b>{point.key}</b>",
+                 pointFormat = point.format,
+                 valueDecimals = 2) %>%
+      hc_legend(enabled = F)
   })
   
   #############################################################################

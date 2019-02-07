@@ -74,8 +74,8 @@ shinyUI(navbarPage(
         
         # Main panel with plot.
         mainPanel(
-          plotOutput("demographicsDiversity",
-                     width = "1000px", height = "2000px")
+          highchartOutput("demographicsDiversity",
+                     width = "700px", height = "2000px")
         )
         
       ),
