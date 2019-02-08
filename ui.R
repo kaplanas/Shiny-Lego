@@ -151,7 +151,7 @@ shinyUI(navbarPage(
             choices = list("Color, then style" = "color.first",
                            "Style, then color" = "style.first")
           ),
-          tags$p(HTML("Style is inferred from keywords in the part name.  A single part may have multiple styles; when you facet by style, a part will appear in <i>all</i> relevant facets."))
+          tags$p(HTML("Style is inferred from keywords in the part name.  A single part may have multiple styles; in that case, it's counted in <i>all</i> relevant styles."))
         ),
 
         # Main panel with plot.

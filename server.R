@@ -186,10 +186,13 @@ shinyServer(function(input, output) {
         mutate(theme.name = "")
     }
     # Use the user selections to determine which levels to plot in which order.
-    label.rules = list(
-      "1" = list(enabled = T),
-      "2" = list(enabled = T),
-      "3" = list(enabled = F)
+    level.settings = list(
+      list(level = 1,
+           dataLabels = list(enabled = T)),
+      list(level = 2,
+           dataLabels = list(enabled = T)),
+      list(level = 3,
+           dataLabels = list(enabled = F))
     )
     if(input$hairTreemapOrderPicker == "style.first") {
       temp.hair.df = temp.hair.df %>%
@@ -201,7 +204,7 @@ shinyServer(function(input, output) {
                name.level.2 = color.name,
                color.level.2 = color.hex,
                opacity.level.2 = 1)
-      label.rules[["2"]][["enabled"]] = F
+      level.settings[[2]][["dataLabels"]][["enabled"]] = F
     } else if(input$hairTreemapOrderPicker == "color.first") {
       temp.hair.df = temp.hair.df %>%
         mutate(id.level.1 = tolower(color.hex),
@@ -212,15 +215,16 @@ shinyServer(function(input, output) {
                name.level.2 = style,
                color.level.2 = color.hex,
                opacity.level.2 = 0)
-      label.rules[["1"]][["enabled"]] = F
+      level.settings[[1]][["dataLabels"]][["enabled"]] = F
     }
     # Add a third level for pieces.
     temp.hair.df = temp.hair.df %>%
       mutate(id.level.3 = tolower(paste(id.level.2, part.name)),
              name.level.3 = part.name,
-             color.level.3 = color.hex)
+             color.level.3 = color.level.2,
+             opacity.level.3 = NA)
     # Create the plot.
-    treemap.graph(temp.hair.df, label.rules)
+    treemap.graph(temp.hair.df, level.settings)
   })
   
   # The actual hair graph.
