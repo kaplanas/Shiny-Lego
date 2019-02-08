@@ -487,7 +487,8 @@ treemap.graph = function(data.df, label.rules) {
   treemap.df = bind_rows(
     # Add one row for each top-level category.
     data.df %>%
-      group_by(id.level.1, name.level.1, color.level.1, opacity.level.1) %>%
+      group_by(theme.name, id.level.1, name.level.1, color.level.1,
+               opacity.level.1) %>%
       summarize(total.parts = sum(num.parts)) %>%
       ungroup() %>%
       mutate(name = name.level.1,
@@ -500,11 +501,11 @@ treemap.graph = function(data.df, label.rules) {
              parent = NA,
              index.1 = NA,
              index.2 = NA) %>%
-      select(name, id, level, value, valuecolor, color, parent, index.1,
-             index.2, opacity),
+      select(theme.name, name, id, level, value, valuecolor, color, parent,
+             index.1, index.2, opacity),
     # Add one row for each second-level category.
     data.df %>%
-      group_by(id.level.1, id.level.2, name.level.2, color.level.2,
+      group_by(theme.name, id.level.1, id.level.2, name.level.2, color.level.2,
                opacity.level.2) %>%
       summarize(total.parts = sum(num.parts)) %>%
       ungroup() %>%
@@ -518,16 +519,16 @@ treemap.graph = function(data.df, label.rules) {
              parent = id.level.1,
              index.1 = id.level.1,
              index.2 = NA) %>%
-      select(name, id, level, value, valuecolor, color, parent, index.1,
-             index.2, opacity)
+      select(theme.name, name, id, level, value, valuecolor, color, parent,
+             index.1, index.2, opacity)
   )
   # Add one row for each third-level category, if any.
   if(is.element("id.level.3", colnames(data.df))) {
     treemap.df = bind_rows(
       treemap.df,
       data.df %>%
-        group_by(id.level.1, id.level.2, id.level.3, name.level.3,
-                 color.level.3) %>%
+        group_by(theme.name, id.level.1, id.level.2, id.level.3,
+                 name.level.3, color.level.3) %>%
         summarize(total.parts = sum(num.parts)) %>%
         ungroup() %>%
         mutate(name = name.level.3,
@@ -540,24 +541,36 @@ treemap.graph = function(data.df, label.rules) {
                index.1 = id.level.2,
                index.2 = id.level.3,
                index.3 = NA) %>%
-        select(name, id, level, value, valuecolor, color, parent, index.1,
-               index.2, index.3)
+        select(theme.name, name, id, level, value, valuecolor, color, parent,
+               index.1, index.2, index.3)
     )
   }
   # Make the treemap.
-  highchart() %>%
-    hc_add_series(data = list_parse(treemap.df),
-                  type = "treemap",
-                  layoutAlgorithm = "squarified",
-                  levelIsConstant = T,
-                  allowDrillToNode = T,
-                  levels = list(
-                    list(level = 1,
-                         dataLabels = list(enabled = label.rules[["1"]][["enabled"]]),
-                         borderWidth = 5),
-                    list(level = 2,
-                         dataLabels = list(enabled = label.rules[["2"]][["enabled"]])),
-                    list(level = 3,
-                         dataLabels = list(enabled = label.rules[["3"]][["enabled"]]))
-                  ))
+  lapply(
+    sort(unique(as.character(data.df$theme.name))),
+    function(x) {
+      hc = highchart() %>%
+        hc_add_series(data = list_parse(treemap.df %>%
+                                          filter(theme.name == x)),
+                      type = "treemap",
+                      layoutAlgorithm = "squarified",
+                      levelIsConstant = T,
+                      allowDrillToNode = T,
+                      levels = list(
+                        list(level = 1,
+                             dataLabels = list(enabled = label.rules[["1"]][["enabled"]]),
+                             borderWidth = 5),
+                        list(level = 2,
+                             dataLabels = list(enabled = label.rules[["2"]][["enabled"]])),
+                        list(level = 3,
+                             dataLabels = list(enabled = label.rules[["3"]][["enabled"]]))
+                      ))
+      if(x != "") {
+        hc = hc %>%
+          hc_title(text = x)
+      }
+      hc
+    }
+  ) %>%
+    hw_grid()
 }

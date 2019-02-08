@@ -148,8 +148,8 @@ shinyUI(navbarPage(
           theme.picker.input("hairTreemapThemePicker", "total.hair"),
           selectInput(
             "hairTreemapOrderPicker", "Adjust order of levels:",
-            choices = list("Style, then color" = "style.first",
-                           "Color, then style" = "color.first")
+            choices = list("Color, then style" = "color.first",
+                           "Style, then color" = "style.first")
           ),
           tags$p(HTML("Style is inferred from keywords in the part name.  A single part may have multiple styles; when you facet by style, a part will appear in <i>all</i> relevant facets."))
         ),
@@ -157,7 +157,7 @@ shinyUI(navbarPage(
         # Main panel with plot.
         mainPanel(div(
           style = "position:relative",
-          uiOutput("hairTreemapUI")
+          htmlOutput("hairTreemapUI")
         ))
 
       )#,

@@ -181,6 +181,9 @@ shinyServer(function(input, output) {
     if(length(selected.themes) > 0) {
       temp.hair.df = temp.hair.df %>%
         filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes))
+    } else {
+      temp.hair.df = temp.hair.df %>%
+        mutate(theme.name = "")
     }
     # Use the user selections to determine which levels to plot in which order.
     label.rules = list(
@@ -221,13 +224,8 @@ shinyServer(function(input, output) {
   })
   
   # The actual hair graph.
-  output$hairTreemap = renderHighchart({
-    hair.treemap()
-  })
   output$hairTreemapUI = renderUI({
-    highchartOutput("hairTreemap",
-                    height = 700,
-                    width = 700)
+    hair.treemap()
   })
   
   #############################################################################
