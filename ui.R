@@ -160,31 +160,30 @@ shinyUI(navbarPage(
           htmlOutput("hairTreemapUI")
         ))
 
-      )#,
+      ),
 
-  #     # Circle-packing plot of clothing type and color.
-  #     tabPanel(
-  #       
-  #       "Clothing",
-  #       
-  #       # Sidebar panel for controls.
-  #       sidebarPanel(
-  #         theme.picker.input("clothesCircleThemePicker", "total.clothes"),
-  #         pickerInput(
-  #           "clothesCircleTypePicker", "Filter to specific types:",
-  #           choices = sort(unique(clothes.type.df$type)),
-  #           multiple = T
-  #         )
-  #       ),
-  #       
-  #       # Main panel with plot.
-  #       mainPanel(div(
-  #         style = "position:relative",
-  #         uiOutput("clothesCirclePlotUI"),
-  #         uiOutput("clothesCircleHover")
-  #       ))
-  # 
-  #    )
+      # Treemap of clothing type and color.
+      tabPanel(
+
+        "Clothing",
+
+        # Sidebar panel for controls.
+        sidebarPanel(
+          theme.picker.input("clothesTreemapThemePicker", "total.clothes"),
+          selectInput(
+            "clothesTreemapOrderPicker", "Adjust order of levels:",
+            choices = list("Color, then type" = "color.first",
+                           "Type, then color" = "type.first")
+          )
+        ),
+        
+        # Main panel with plot.
+        mainPanel(div(
+          style = "position:relative",
+          htmlOutput("clothesTreemapUI")
+        ))
+
+     )
 
     )
 

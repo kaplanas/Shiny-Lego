@@ -236,59 +236,76 @@ shinyServer(function(input, output) {
   # Clothing                                                                  #
   #############################################################################
   
-  # # Create the clothing circle graph.
-  # clothes.circle.graph = reactive({
-  #   # Store the themes and types chosen by the user in variables with shorter
-  #   # names.
-  #   selected.themes = input$clothesCircleThemePicker
-  #   selected.types = input$clothesCircleTypePicker
-  #   # Determine what we're going to facet by: theme, type, both, or neither.
-  #   # Filter if necessary.
-  #   if(length(selected.types) > 0) {
-  #     temp.clothes.df = clothes.type.df %>%
-  #       filter(type %in% selected.types) %>%
-  #       mutate(facet.name = type,
-  #              facet.theme = "",
-  #              facet.other = type)
-  #   } else {
-  #     temp.clothes.df = clothes.df %>%
-  #       mutate(facet.name = "",
-  #              facet.theme = "",
-  #              facet.other = "")
-  #   }
-  #   if(length(selected.themes) > 0) {
-  #     temp.clothes.df = temp.clothes.df %>%
-  #       filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes)) %>%
-  #       mutate(facet.name = ifelse(facet.name != "",
-  #                                  paste(facet.name, theme.name),
-  #                                  theme.name),
-  #              facet.theme = theme.name)
-  #   }
-  #   circle.graph(temp.clothes.df,
-  #                facet.by.theme = length(selected.themes) > 0,
-  #                facet.by.other = length(selected.types) > 0)
-  # })
-  # 
-  # # The actual clothing graph.
-  # output$clothesCirclePlot <- renderPlot({
-  #   clothes.circle.graph()
-  # })
-  # output$clothesCirclePlotUI <- renderUI({
-  #   plotOutput("clothesCirclePlot",
-  #              width = circle.plot.width(length(input$clothesCircleThemePicker),
-  #                                        length(input$clothesCircleTypePicker)),
-  #              height = circle.plot.height(length(input$clothesCircleThemePicker),
-  #                                          length(input$clothesCircleTypePicker)),
-  #              hover = hoverOpts("clothesCirclePlotHover",
-  #                                delay = 20, delayType = "debounce"))
-  # })
-  # 
-  # # Tooltip for the clothing graph.
-  # output$clothesCircleHover = renderUI({
-  #   circle.tooltip(input$clothesCirclePlotHover,
-  #                  clothes.circle.graph()$data,
-  #                  length(input$clothesCircleThemePicker) > 0,
-  #                  length(input$clothesCircleTypePicker) > 0)
-  # })
+  # Create the clothing treemap.
+  clothes.treemap = reactive({
+    # Store the themes chosen by the user in a variable.
+    selected.themes = input$clothesTreemapThemePicker
+    # Filter on theme, if specified by the user.
+    temp.clothes.df = clothes.type.df
+    if(length(selected.themes) > 0) {
+      temp.clothes.df = temp.clothes.df %>%
+        filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes))
+    } else {
+      temp.clothes.df = temp.clothes.df %>%
+        mutate(theme.name = "")
+    }
+    # Start with upper vs. lower as the top level.
+    temp.clothes.df = temp.clothes.df %>%
+      mutate(id.level.1 = tolower(upper.lower),
+             name.level.1 = case_when(upper.lower == "upper" ~ "Upper",
+                                      upper.lower == "lower" ~ "Lower",
+                                      T ~ ""),
+             color.level.1 = NA,
+             opacity.level.1 = 0)
+    # Use the user selections to determine which levels to plot in which order.
+    level.settings = list(
+      list(level = 1,
+           dataLabels = list(enabled = F),
+           borderWidth = 20,
+           layoutStartingDirection = "horizontal"),
+      list(level = 2,
+           dataLabels = list(enabled = T)),
+      list(level = 3,
+           dataLabels = list(enabled = T)),
+      list(level = 4,
+           dataLabels = list(enabled = F))
+    )
+    if(input$clothesTreemapOrderPicker == "type.first") {
+      temp.clothes.df = temp.clothes.df %>%
+        mutate(id.level.2 = tolower(paste(upper.lower, type)),
+               name.level.2 = type,
+               color.level.2 = NA,
+               opacity.level.2 = 0,
+               id.level.3 = tolower(paste(upper.lower, type, color.hex)),
+               name.level.3 = color.name,
+               color.level.3 = color.hex,
+               opacity.level.3 = 1)
+      level.settings[[3]][["dataLabels"]][["enabled"]] = F
+    } else if(input$clothesTreemapOrderPicker == "color.first") {
+      temp.clothes.df = temp.clothes.df %>%
+        mutate(id.level.2 = tolower(paste(upper.lower, color.hex)),
+               name.level.2 = color.name,
+               color.level.2 = color.hex,
+               opacity.level.2 = 1,
+               id.level.3 = tolower(paste(upper.lower, color.hex, type)),
+               name.level.3 = type,
+               color.level.3 = color.hex,
+               opacity.level.3 = 0)
+      level.settings[[2]][["dataLabels"]][["enabled"]] = F
+    }
+    # Add a fourth level for pieces.
+    temp.clothes.df = temp.clothes.df %>%
+      mutate(id.level.4 = tolower(paste(id.level.3, part.name)),
+             name.level.4 = part.name,
+             color.level.4 = color.level.2,
+             opacity.level.4 = NA)
+    # Create the plot.
+    treemap.graph(temp.clothes.df, level.settings)
+  })
+  
+  # The actual clothing graph.
+  output$clothesTreemapUI = renderUI({
+    clothes.treemap()
+  })
   
 })
