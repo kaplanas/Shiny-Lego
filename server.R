@@ -99,7 +99,7 @@ shinyServer(function(input, output) {
       sep = ""
     )
     # Make the plot.
-    highchart() %>%
+    hc = highchart() %>%
       hc_chart(type = "bar") %>%
       hc_xAxis(categories = temp.heads.df$theme.name) %>%
       hc_add_series(pointPadding = 0,
@@ -114,6 +114,11 @@ shinyServer(function(input, output) {
                  pointFormat = point.format,
                  valueDecimals = 2) %>%
       hc_legend(enabled = F)
+    if(input$demographicsMeasurePicker == "Percent female") {
+      hc = hc %>%
+        hc_yAxis(max = 100)
+    }
+    hc
   })
   
   #############################################################################

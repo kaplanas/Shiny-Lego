@@ -28,9 +28,11 @@ shinyUI(navbarPage(
             multiple = T
           ),
           tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
-          tags$p("Each circle represents a unique minifigure or minidoll head.  The area of the circle is proportional to the number of pieces across all sets.  Use the filters to facet by theme and/or gender.  Hover over a circle to see the part name."),
-          tags$p("\"Ethnicity\" is the color of the head.  Yes, it's silly."),
-          tags$p("Gender is inferred from keywords in the part name."),
+          tags$p(HTML("Each circle represents a <b>unique minifigure or minidoll head</b>.")),
+          tags$p(HTML("<b>Hover</b> to see the part name.")),
+          tags$p(HTML("Area is proportional to the <b>number of pieces</b> across all sets.")),
+          tags$p(HTML("<b>\"Ethnicity\"</b> is the color of the piece.")),
+          tags$p(HTML("<b>Gender</b> is inferred from keywords in the part name.")),
           tags$ul(
             tags$li("Male: \"Male\", \"Beard\", \"Moustache\", \"Stubble\", \"Goatee\", \"Sideburn\""),
             tags$li("Female: \"Female\", \"Girl\", \"Woman\"")
@@ -65,8 +67,8 @@ shinyUI(navbarPage(
             selected = "Measure",
             multiple = F
           ),
-          tags$p("Ethnic diversity is the Shannon entropy (base 2) of color over all pieces."),
-          tags$p("Percent female is the percent of female pieces out of all pieces, excluding pieces of unknown gender.")
+          tags$p(HTML("<b>Ethnic diversity</b> is the Shannon entropy (base 2) of color over all pieces.")),
+          tags$p(HTML("<b>Percent female</b> is the percent of female pieces out of all pieces, excluding pieces of unknown gender."))
         ),
         
         # Main panel with plot.
@@ -151,7 +153,9 @@ shinyUI(navbarPage(
             choices = list("Color, then style" = "color.first",
                            "Style, then color" = "style.first")
           ),
-          tags$p(HTML("Style is inferred from keywords in the part name.  A single part may have multiple styles; in that case, it's counted in <i>all</i> relevant styles."))
+          tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
+          tags$p(HTML("<b>Style</b> is inferred from keywords in the part name.")),
+          tags$p(HTML("A single part may have <b>multiple styles</b>; in that case, it's counted in <i>all</i> relevant styles."))
         ),
 
         # Main panel with plot.
@@ -174,7 +178,11 @@ shinyUI(navbarPage(
             "clothesTreemapOrderPicker", "Adjust order of levels:",
             choices = list("Color, then type" = "color.first",
                            "Type, then color" = "type.first")
-          )
+          ),
+          tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
+          tags$p(HTML("Clothes for the <b>upper</b> and <b>lower</b> body are shown separately.")),
+          tags$p(HTML("<b>Type</b> is inferred from keywords in the part name.")),
+          tags$p(HTML("A single part may have <b>multiple types</b>; in that case, it's counted in <i>all</i> relevant types."))
         ),
         
         # Main panel with plot.
