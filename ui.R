@@ -155,6 +155,7 @@ shinyUI(navbarPage(
           ),
           tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
           tags$p(HTML("<b>Style</b> is inferred from keywords in the part name.")),
+          tags$p(HTML("A part with no keywords is classified as <b>\"Other\"</b>.")),
           tags$p(HTML("A single part may have <b>multiple styles</b>; in that case, it's counted in <i>all</i> relevant styles."))
         ),
 
@@ -179,9 +180,26 @@ shinyUI(navbarPage(
             choices = list("Color, then type" = "color.first",
                            "Type, then color" = "type.first")
           ),
+          checkboxInput(
+            "clothesTreemapShowOther", tags$b("Show \"other\" pieces (with no type)"),
+            value = T
+          ),
+          pickerInput(
+            "clothesTreemapTypePicker",
+            "Filter to one or more clothing types:",
+            choices = data.frame(
+              clothes.type.df %>%
+                group_by(type) %>%
+                summarize(total.parts = sum(num.parts)) %>%
+                mutate(label = paste(type, " (", total.parts, ")", sep = "")) %>%
+                arrange(desc(total.parts))
+            )$label,
+            multiple = T
+          ),
           tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
           tags$p(HTML("Clothes for the <b>upper</b> and <b>lower</b> body are shown separately.")),
           tags$p(HTML("<b>Type</b> is inferred from keywords in the part name.")),
+          tags$p(HTML("A part with no keywords is classified as <b>\"Other\"</b>.")),
           tags$p(HTML("A single part may have <b>multiple types</b>; in that case, it's counted in <i>all</i> relevant types."))
         ),
         

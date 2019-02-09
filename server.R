@@ -243,9 +243,10 @@ shinyServer(function(input, output) {
   
   # Create the clothing treemap.
   clothes.treemap = reactive({
-    # Store the themes chosen by the user in a variable.
+    # Store the themes and types chosen by the user in variables.
     selected.themes = input$clothesTreemapThemePicker
-    # Filter on theme, if specified by the user.
+    selected.types = input$clothesTreemapTypePicker
+    # Filter on theme and/or type, if specified by the user.
     temp.clothes.df = clothes.type.df
     if(length(selected.themes) > 0) {
       temp.clothes.df = temp.clothes.df %>%
@@ -253,6 +254,15 @@ shinyServer(function(input, output) {
     } else {
       temp.clothes.df = temp.clothes.df %>%
         mutate(theme.name = "")
+    }
+    if(length(selected.types) > 0) {
+      temp.clothes.df = temp.clothes.df %>%
+        filter(type %in% gsub(" \\([0-9]+\\)$", "", selected.types))
+    }
+    # Remove "other" pieces, if so specified by the user.
+    if(!input$clothesTreemapShowOther) {
+      temp.clothes.df = temp.clothes.df %>%
+        filter(!grepl("^Other", type))
     }
     # Start with upper vs. lower as the top level.
     temp.clothes.df = temp.clothes.df %>%
