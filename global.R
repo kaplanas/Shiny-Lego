@@ -11,6 +11,7 @@ library(DT)
 library(treemap)
 library(highcharter)
 library(purrr)
+library(stringr)
 
 theme_set(theme_bw())
 
@@ -190,19 +191,22 @@ hair.style.df = bind_rows(
 
 # Create another table with (garment) type keywords; a piece gets multiple rows
 # if it's associated with multiple types.  Add a row with the type "Other" for
-# pieces that don't have any other type keywords.
+# pieces that don't have any other type keywords.  If the keyword is
+# immediately preceded by color, replace the color of the piece with the color
+# word.  (If multiple color names match the string before the keyword, use the
+# longest one; this is likely to be the correct, and most specific, choice.)
 clothes.type.words.df = data.frame(
   word = c("Shirt", "Jacket", "Armor", "Vest", "Suit", "Robe", "Skirt",
            "Overalls", "Sweater", "Uniform", "Trousers", "Coat", "Loincloth",
            "Halter", "Shorts", "Breastplate", "Blouse", "Corset", "Sweatshirt",
-           "T-shirt", "Apron", "Jumpsuit", "Bikini", "Spacesuit", "Wetsuit",
-           "Leotard", "Swimsuit", "Blazer", "Waistcoat", "Tuxedo", "Jeans",
-           "Kimono", "Nightgown", "Pajama"),
-  regex = c("shirt", "Jacket", "armou?r", "vest", "\\bsuit", "robe", "skirt",
-            "overalls|dungarees", "sweater", "uniform", "trousers",
+           "Apron", "Jumpsuit", "Bikini", "Spacesuit", "Wetsuit", "Leotard",
+           "Swimsuit", "Blazer", "Waistcoat", "Tuxedo", "Jeans", "Kimono",
+           "Nightgown", "Pajama"),
+  regex = c("(t-)?shirt", "jacket", "armou?r", "vest", "\\bsuit", "robe",
+            "skirt", "overalls|dungarees", "sweater", "uniform", "trousers",
             "coats?\\b", "loincloth", "halter", "shorts", "breastplate",
-            "blouse", "corset", "sweatshirt", "tshirt", "apron", "jumpsuit",
-            "bikini", "spacesuit", "wetsuit", "leotard", "swimsuit", "blazer",
+            "blouse", "corset", "sweatshirt", "apron", "jumpsuit", "bikini",
+            "spacesuit", "wetsuit", "leotard", "swimsuit", "blazer",
             "waistcoat", "tuxedo", "jeans", "kimono", "nightgown", "pajama")
 )
 clothes.type.df = do.call(
@@ -210,9 +214,40 @@ clothes.type.df = do.call(
   apply(
     clothes.type.words.df, 1,
     function(x) {
-      clothes.df %>%
-        filter(grepl(x[2], gsub("[^A-Za-z0-9]", "", tolower(part.name)))) %>%
+      temp.df = clothes.df %>%
+        filter(grepl(x[2], gsub("[^A-Za-z0-9 ]", "", tolower(part.name)))) %>%
         mutate(type = x[1])
+      temp.df$string.before.type = str_match(gsub("[^A-Za-z0-9 -]", "",
+                                                  tolower(temp.df$part.name)),
+                                             paste("^(.*[^ ]) [a-z]*",
+                                                   x[2],
+                                                   sep = ""))[,2]
+      temp.colors.df = temp.df %>%
+        select(part.id, string.before.type) %>%
+        fuzzy_join(colors.df,
+                   by = c("string.before.type" = "name"),
+                   match_fun = function(x, y) { endsWith(x, tolower(y)) }) %>%
+        group_by(part.id) %>%
+        mutate(color.rank = row_number(name)) %>%
+        filter(color.rank == 1) %>%
+        select(part.id, name, is_trans, color.hex, text.color.hex)
+      temp.df = temp.df %>%
+        left_join(temp.colors.df, by = c("part.id")) %>%
+        mutate(color.name = ifelse(is.na(name), color.name, name),
+               color.hex = ifelse(is.na(name), color.hex.x, color.hex.y),
+               color.is.trans = ifelse(is.na(name),
+                                       color.is.trans,
+                                       case_when(is_trans == "t" ~ T,
+                                                 is_trans == "f" ~ F,
+                                                 T ~ NA)),
+               text.color.hex = ifelse(is.na(name),
+                                       text.color.hex.x,
+                                       text.color.hex.y)) %>%
+        select(part.id, part.name, upper.lower, color.name, color.hex,
+               color.is.trans, text.color.hex, set.name, theme.name,
+               sub.theme.name, sub.sub.theme.name, num.parts, theme.num.parts,
+               type)
+      temp.df
     }
   )
 )
@@ -221,7 +256,8 @@ clothes.type.df = bind_rows(
   clothes.df %>%
     anti_join(clothes.type.df, by = c("part.id")) %>%
     mutate(type = paste("Other",
-                        ifelse(upper.lower == "upper", "Upper", "Lower")))
+                        ifelse(upper.lower == "upper", "Upper", "Lower")),
+           string.before.type = NA)
 )
 
 # Update theme count table.

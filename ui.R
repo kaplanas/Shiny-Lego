@@ -200,7 +200,8 @@ shinyUI(navbarPage(
           tags$p(HTML("Clothes for the <b>upper</b> and <b>lower</b> body are shown separately.")),
           tags$p(HTML("<b>Type</b> is inferred from keywords in the part name.")),
           tags$p(HTML("A part with no keywords is classified as <b>\"Other\"</b>.")),
-          tags$p(HTML("A single part may have <b>multiple types</b>; in that case, it's counted in <i>all</i> relevant types."))
+          tags$p(HTML("A single part may have <b>multiple types</b>; in that case, it's counted in <i>all</i> relevant types.")),
+          tags$p(HTML("<b>Color</b> is inferred from the color word(s) immediately before the type keyword, if any (e.g., \"<u>White</u> Shirt\").  Otherwise, the color of the piece is used.  This method is not 100&percnt; accurate; it misses cases like \"<u>White</u> Button-Down Shirt\"."))
         ),
         
         # Main panel with plot.
