@@ -371,6 +371,10 @@ theme.counts.df = theme.counts.df %>%
   left_join(fashion.items.df %>%
               group_by(theme.name) %>%
               summarize(total.fashion.items = sum(total.parts)),
+            by = c("theme.name")) %>%
+  left_join(moods.df %>%
+              group_by(theme.name) %>%
+              summarize(total.moods = sum(num.parts)),
             by = c("theme.name"))
 
 # Function to create a theme picker input.  We will need several of these.

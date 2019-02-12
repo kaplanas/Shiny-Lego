@@ -41,10 +41,9 @@ shinyUI(navbarPage(
         ),
             
         # Main panel with plot.
-        mainPanel(div(
-          style = "position:relative",
+        mainPanel(
           uiOutput("demographicsCirclePlotUI")
-        ))
+        )
       
       ),
       
@@ -249,6 +248,37 @@ shinyUI(navbarPage(
 
     )
 
+  ),
+  
+  # Moods.
+  tabPanel(
+    
+    "Moods",
+    
+    # One tab for each plot/table.
+    tabsetPanel(
+      
+      type = "tabs",
+      
+      # Polar plot of moods.
+      tabPanel(
+        
+        "Mood frequency",
+        
+        # Sidebar panel for controls.
+        sidebarPanel(
+          theme.picker.input("moodsPolarThemePicker", "total.moods")
+        ),
+        
+        # Main panel with plot.
+        mainPanel(
+          uiOutput("moodsPolarPlotUI")
+        )
+        
+      )
+      
+    )
+    
   )
   
 ))

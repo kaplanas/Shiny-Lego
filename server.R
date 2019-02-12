@@ -410,4 +410,54 @@ shinyServer(function(input, output) {
                                 "Number of pieces"))
   })
   
+  #############################################################################
+  #############################################################################
+  ## Moods                                                                   ##
+  #############################################################################
+  #############################################################################
+  
+  #############################################################################
+  # Mood frequency                                                            #
+  #############################################################################
+  
+  output$moodsPolarPlotUI = renderUI({
+    temp.moods.df = moods.df %>%
+      mutate(facet.name = "")
+    # Store the themes chosen by the user in a variable with a shorter name.
+    selected.themes = input$moodsPolarThemePicker
+    # Filter if necessary.
+    if(length(selected.themes) > 0) {
+      temp.moods.df = temp.moods.df %>%
+        filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes)) %>%
+        mutate(facet.name = theme.name)
+    }
+    # Make the plot.
+    temp.moods.df = temp.moods.df %>%
+      group_by(mood, mood.color, facet.name) %>%
+      summarize(total.parts = sum(num.parts))
+    lapply(
+      sort(unique(as.character(temp.moods.df$facet.name))),
+      function(x) {
+        hc = hchart(temp.moods.df %>%
+                      filter(as.character(facet.name) == x),
+                    "column",
+                    hcaes(x = mood, y = total.parts, color = mood.color)) %>%
+          hc_chart(polar = T) %>%
+          hc_pane(startAngle = 270) %>%
+          hc_tooltip(borderWidth = 3,
+                     headerFormat = "<span><b>{point.key}:</b></span>\u00A0",
+                     pointFormat = "{point.y}") %>%
+          hc_plotOptions(column = list(pointPadding = 0,
+                                       groupPadding = 0)) %>%
+          hc_add_theme(hc_theme_null())
+        if(x != "") {
+          hc = hc %>%
+            hc_title(text = x)
+        }
+        hc
+      }
+    ) %>%
+      hw_grid()
+  })
+  
 })
