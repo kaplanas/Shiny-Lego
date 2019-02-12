@@ -355,4 +355,59 @@ shinyServer(function(input, output) {
     accessories.treemap()
   })
   
+  #############################################################################
+  # Find sets with a specific fashion item                                    #
+  #############################################################################
+  
+  output$fashionSets = renderDataTable({
+    # Store the themes, colors, and items chosen by the user in variables with
+    # shorter names.
+    selected.themes = input$fashionSetThemePicker
+    selected.colors = input$fashionSetColorPicker
+    selected.hair.styles = input$fashionSetHairStylePicker
+    selected.clothing.types = input$fashionSetClothingTypePicker
+    selected.accessories = input$fashionSetAccessoryPicker
+    # Get the dataset to display.  Filter if necessary.
+    temp.fashion.items.df = fashion.items.df %>%
+      dplyr::select(theme.name, set.name, part.name, hair.styles,
+                    clothing.types, accessories, color.name, color.hex,
+                    text.color.hex, total.parts)
+    if(length(selected.themes) > 0) {
+      temp.fashion.items.df = temp.fashion.items.df %>%
+        filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes))
+    }
+    if(length(selected.colors) > 0) {
+      temp.fashion.items.df = temp.fashion.items.df %>%
+        filter(color.name %in% selected.colors)
+    }
+    if(length(selected.hair.styles) > 0) {
+      temp.fashion.items.df = temp.fashion.items.df %>%
+        filter(grepl(paste("(",
+                           paste0(selected.hair.styles, collapse = "|"),
+                           ")\\b",
+                           sep = ""), hair.styles))
+    }
+    if(length(selected.clothing.types) > 0) {
+      temp.fashion.items.df = temp.fashion.items.df %>%
+        filter(grepl(paste("(",
+                           paste0(selected.clothing.types, collapse = "|"),
+                           ")\\b",
+                           sep = ""), clothing.types))
+    }
+    if(length(selected.accessories) > 0) {
+      temp.fashion.items.df = temp.fashion.items.df %>%
+        filter(grepl(paste("(",
+                           paste0(selected.accessories, collapse = "|"),
+                           ")\\b",
+                           sep = ""), accessories))
+    }
+    # Display the dataset.
+    part.table(temp.fashion.items.df,
+               columns.to.hide = c(7, 8),
+               column.names = c("Theme", "Set", "Part", "Hair styles",
+                                "Clothing types", "Accessories", "Color",
+                                "Color hex", "Text color hex",
+                                "Number of pieces"))
+  })
+  
 })

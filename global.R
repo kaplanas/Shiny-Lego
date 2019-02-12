@@ -277,26 +277,28 @@ accessories.df = lego.df %>%
 accessory.words.df = data.frame(
   word = c("Glasses", "Mask", "Headset", "Goggles", "Balaclava", "Headband",
            "Visor", "Tattoo", "Helmet", "Hood", "Crown", "Belt", "Cloak",
-           "Bag", "Veil", "Bow", "Button", "Earrings", "Fan", "Ring",
-           "Jewelry", "Headgear", "Hat", "Headdress", "Badge", "Pocket",
-           "Zipper", "Tie", "Sash", "Collar", "Necklace", "Boots", "Buckle",
-           "Shoes", "Scarf", "Harness", "Sandals", "Medallion", "Suspenders",
-           "Purse", "Amulet", "Ruffle", "Stethoscope", "Backpack", "Medal",
-           "Ribbon", "Cape", "Tassel", "Gloves", "Watch", "Sneakers", "Socks",
-           "Epaulettes", "Diaper", "Handcuffs", "Shawl", "Skates",
-           "Life Preserver", "Poncho"),
+           "Bag", "Veil", "Bow", "Button", "Earrings", "Fan", "Jewelry",
+           "Headgear", "Hat", "Headdress", "Badge", "Pocket", "Zipper", "Tie",
+           "Sash", "Collar", "Necklace", "Boots", "Buckle", "Shoes", "Scarf",
+           "Harness", "Sandals", "Medallion", "Suspenders", "Purse", "Amulet",
+           "Ruffle", "Stethoscope", "Backpack", "Medal", "Ribbon", "Cape",
+           "Tassel", "Gloves", "Watch", "Sneakers", "Socks", "Epaulettes",
+           "Diaper", "Handcuffs", "Shawl", "Skates", "Life Preserver",
+           "Poncho", "Breathing Apparatus", "Scuba Tank"),
   regex = c("(sun)?glass|monocle", "mask", "head(set|phone)", "goggle",
             "balaclava", "headband", "visor", "tattoo", "helmet", "hood|cowl",
             "crown|tiara", "belt|cummerbund", "cloak", "pouch|bag\\b", "veil",
-            "bow", "button", "earring", "fan\\b", "\\bring",
-            "jewel|gem|bead|br(o|a)ch", "headgear", "hat|cap|fez", "headdress",
-            "badge", "pocket", "zipper", "\\b(neck)?tie\\b", "sash", "collar",
-            "necklace|pend(a|e)nt|locket", "boot", "buckle", "\\bshoe",
-            "scarf|neckerchief|bandanna", "harness", "sandal", "medallion",
-            "suspender", "purse", "amulet", "ruffle|frill", "stethoscope",
-            "(back)?pack|knapsack", "medal", "ribbon", "cape", "tassel",
-            "glove|gauntlet", "watch", "sneaker", "sock|stocking", "epaulet",
-            "diaper", "handcuff", "shawl", "skate", "preserver", "poncho")
+            "bows?\\b", "button", "earring", "fan\\b",
+            "jewel|gem|bead|br(o|a)ch", "headgear", "hats?\\b|caps?\\b|fez",
+            "headdress", "badge", "pocket", "zipper", "\\b(neck)?tie\\b",
+            "sash", "collar", "necklace|pend(a|e)nt|locket", "boot", "buckle",
+            "\\bshoe", "scarf|neckerchief|bandann?a", "harness", "sandal",
+            "medallion", "suspender", "purse", "amulet", "ruffle|frill",
+            "stethoscope", "(back)?pack|knapsack", "medal", "ribbon", "cape",
+            "tassel", "glove|gauntlet", "watch", "sneaker",
+            "(sock|stocking)s?\\b", "epaulet", "diaper", "handcuff", "shawl",
+            "skate", "preserver", "poncho", "breathing apparatus",
+            "scuba tank")
 )
 accessory.parts.df = do.call(
   "bind_rows",
@@ -321,6 +323,30 @@ accessory.parts.df = do.call(
   )
 )
 
+# Create a table with all fashion items.
+fashion.items.df = lego.df %>%
+  left_join(hair.style.df %>%
+              select(part.id, style) %>%
+              distinct() %>%
+              group_by(part.id) %>%
+              summarize(hair.styles = paste0(style, collapse = ", ")),
+            by = c("part.id")) %>%
+  left_join(clothes.type.df %>%
+              select(part.id, type) %>%
+              distinct() %>%
+              group_by(part.id) %>%
+              summarize(clothing.types = paste0(type, collapse = ", ")),
+            by = c("part.id")) %>%
+  left_join(accessory.parts.df %>%
+              select(part.id, accessory) %>%
+              distinct() %>%
+              group_by(part.id) %>%
+              summarize(accessories = paste0(accessory, collapse = ", ")),
+            by = c("part.id")) %>%
+  filter(!is.na(hair.styles) |
+           !is.na(clothing.types) |
+           !is.na(accessories))
+
 # Update theme count table.
 theme.counts.df = theme.counts.df %>%
   left_join(heads.df %>%
@@ -341,6 +367,10 @@ theme.counts.df = theme.counts.df %>%
   left_join(accessory.parts.df %>%
               group_by(theme.name) %>%
               summarize(total.accessories = sum(num.parts)),
+            by = c("theme.name")) %>%
+  left_join(fashion.items.df %>%
+              group_by(theme.name) %>%
+              summarize(total.fashion.items = sum(total.parts)),
             by = c("theme.name"))
 
 # Function to create a theme picker input.  We will need several of these.
@@ -355,6 +385,34 @@ theme.picker.input = function(input.id, column.with.counts) {
         mutate(label = paste(theme.name, " (", count.to.display, ")", sep = "")) %>%
         arrange(desc(count.to.display), theme.name)
     )$label,
+    multiple = T
+  )
+}
+
+# Function to create a color picker input.  We will need several of these.
+color.picker.input = function(input.id, data.df, label.text) {
+  pickerInput(
+    input.id, label.text,
+    choices = sort(unique(data.df$color.name)),
+    choicesOpt = list(content =
+                        sapply(sort(unique(data.df$color.name)),
+                               function(x) {
+                                 background.color = paste("background-color: ",
+                                                          unique(colors.df$color.hex[colors.df$name == x]),
+                                                          ";",
+                                                          sep = "")
+                                 text.color = paste("color: ",
+                                                    unique(colors.df$text.color.hex[colors.df$name == x]),
+                                                    ";",
+                                                    sep = "")
+                                 num.rows = nrow(data.df[data.df$color.name == x,])
+                                 HTML(paste("<span style=\"padding: 2px; ",
+                                            background.color, " ",
+                                            text.color, "\">",
+                                            x, " (", num.rows, ")",
+                                            "</span>",
+                                            sep = ""))
+                               })),
     multiple = T
   )
 }

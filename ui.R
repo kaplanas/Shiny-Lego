@@ -87,30 +87,9 @@ shinyUI(navbarPage(
         # Sidebar panel for controls.
         sidebarPanel(
           theme.picker.input("demographicsSetThemePicker", "total.heads"),
-          pickerInput(
-            "demographicsSetEthnicityPicker", "Filter to one or more ethnicities:",
-            choices = sort(unique(heads.df$color.name)),
-            choicesOpt = list(content =
-                                sapply(sort(unique(heads.df$color.name)),
-                                       function(x) {
-                                         background.color = paste("background-color: ",
-                                                                  unique(colors.df$color.hex[colors.df$name == x]),
-                                                                  ";",
-                                                                  sep = "")
-                                         text.color = paste("color: ",
-                                                            unique(colors.df$text.color.hex[colors.df$name == x]),
-                                                            ";",
-                                                            sep = "")
-                                         num.heads = nrow(heads.df[heads.df$color.name == x,])
-                                         HTML(paste("<span style=\"padding: 2px; ",
-                                                    background.color, " ",
-                                                    text.color, "\">",
-                                                    x, " (", num.heads, ")",
-                                                    "</span>",
-                                                    sep = ""))
-                                               })),
-            multiple = T
-          ),
+          color.picker.input("demographicsSetEthnicityPicker",
+                             heads.df,
+                             "Filter to one or more ethnicities"),
           pickerInput(
             "demographicsSetGenderPicker", "Filter to one or more genders:",
             choices = sort(unique(heads.df$gender)),
@@ -231,6 +210,40 @@ shinyUI(navbarPage(
          style = "position:relative",
          htmlOutput("accessoriesTreemapUI")
        ))
+       
+     ),
+     
+     # Table for finding sets with pieces with particular hair styles,
+     # clothing types, or accessories.
+     tabPanel(
+       
+       "Find sets with a specific item",
+       
+       # Sidebar panel for controls.
+       sidebarPanel(
+         theme.picker.input("fashionSetThemePicker", "total.fashion.items"),
+         color.picker.input("fashionSetColorPicker",
+                            fashion.items.df,
+                            "Filter to one or more colors"),
+         pickerInput("fashionSetHairStylePicker",
+                     "Filter to one or more hair styles",
+                     choices = sort(unique(hair.style.df$style)),
+                     multiple = T),
+         pickerInput("fashionSetClothingTypePicker",
+                     "Filter to one or more clothing types",
+                     choices = sort(unique(clothes.type.df$type)),
+                     multiple = T),
+         pickerInput("fashionSetAccessoryPicker",
+                     "Filter to one or more accessories",
+                     choices = sort(unique(accessory.parts.df$accessory)),
+                     multiple = T),
+         tags$p(HTML("<b>Color</b> is the color of the piece, which may be different from the color of various items printed on the piece."))
+       ),
+       
+       # Main panel with table.
+       mainPanel(
+         dataTableOutput("fashionSets")
+       )
        
      )
 
