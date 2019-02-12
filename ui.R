@@ -210,6 +210,28 @@ shinyUI(navbarPage(
           htmlOutput("clothesTreemapUI")
         ))
 
+     ),
+     
+     # Treemap of accessories.
+     tabPanel(
+       
+       "Accessories",
+       
+       # Sidebar panel for controls.
+       sidebarPanel(
+         theme.picker.input("accessoriesTreemapThemePicker", "total.accessories"),
+         tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
+         tags$p(HTML("<b>Accessories</b> are inferred from keywords in the part name.")),
+         tags$p(HTML("A single part may have <b>multiple accessories</b>; in that case, it's counted in <i>all</i> relevant accessories.")),
+         tags$p(HTML("<b>Color</b> is not included because it can't consistently be inferred from the dataset.  The color of the accessory may be the color of the piece, a color noted in the name of the part, or not indicated at all."))
+       ),
+       
+       # Main panel with plot.
+       mainPanel(div(
+         style = "position:relative",
+         htmlOutput("accessoriesTreemapUI")
+       ))
+       
      )
 
     )

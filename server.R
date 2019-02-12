@@ -323,4 +323,48 @@ shinyServer(function(input, output) {
     clothes.treemap()
   })
   
+  #############################################################################
+  # Accessories                                                               #
+  #############################################################################
+  
+  # Create the accessories treemap.
+  accessories.treemap = reactive({
+    # Store the themes chosen by the user in variables.
+    selected.themes = input$accessoriesTreemapThemePicker
+    # Filter on theme, if specified by the user.
+    temp.accessories.df = accessory.parts.df
+    if(length(selected.themes) > 0) {
+      temp.accessories.df = temp.accessories.df %>%
+        filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes))
+    } else {
+      temp.accessories.df = temp.accessories.df %>%
+        mutate(theme.name = "")
+    }
+    # Two levels: accessory, then part.
+    level.settings = list(
+      list(level = 1,
+           dataLabels = list(enabled = T),
+           borderWidth = 3,
+           borderColor = "black"),
+      list(level = 2,
+           dataLabels = list(enabled = F))
+    )
+    temp.accessories.df = temp.accessories.df %>%
+      mutate(id.level.1 = tolower(accessory),
+             name.level.1 = accessory,
+             color.level.1 = "#FFFFFF",
+             opacity.level.1 = 0,
+             id.level.2 = tolower(paste(accessory, part.name)),
+             name.level.2 = part.name,
+             color.level.2 = "#FFFFFF",
+             opacity.level.2 = 0)
+    # Create the plot.
+    treemap.graph(temp.accessories.df, level.settings)
+  })
+  
+  # The actual accessory graph.
+  output$accessoriesTreemapUI = renderUI({
+    accessories.treemap()
+  })
+  
 })

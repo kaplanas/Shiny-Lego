@@ -1,7 +1,6 @@
 library(dplyr)
 library(tibble)
 library(ggplot2)
-library(ggforce)
 library(shiny)
 library(shinyWidgets)
 library(igraph)
@@ -12,6 +11,7 @@ library(treemap)
 library(highcharter)
 library(purrr)
 library(stringr)
+library(fuzzyjoin)
 
 theme_set(theme_bw())
 
@@ -143,7 +143,7 @@ heads.df = heads.df %>%
          sub.sub.theme.name, num.parts, theme.num.parts, theme.pct.female,
          theme.ethnic.diversity)
 
-# Create a table of minifigure headwear (for fashion).
+# Create a table of minifigure hair (for fashion).
 hair.df = lego.df %>%
   filter(grepl("Headwear", part.category.name) &
            grepl("Hair", part.name)) %>%
@@ -260,6 +260,67 @@ clothes.type.df = bind_rows(
            string.before.type = NA)
 )
 
+# Create a table of minifigure accessories (for fashion).
+accessories.df = lego.df %>%
+  filter(part.category.name == "Minifig Accessories") %>%
+  mutate(num.parts = ifelse(is.na(inv.num.sets), 1, inv.num.sets) *
+           ifelse(is.na(inv.num.parts), 1, inv.num.parts)) %>%
+  group_by(theme.name) %>%
+  mutate(theme.num.parts = sum(num.parts)) %>%
+  ungroup() %>%
+  select(part.id, part.name, color.name, color.hex, color.is.trans,
+         text.color.hex, set.name, theme.name, sub.theme.name,
+         sub.sub.theme.name, num.parts, theme.num.parts)
+
+# Create another table with accessory keywords; a piece gets multiple rows if
+# it's associated with multiple accessories.
+accessory.words.df = data.frame(
+  word = c("Glasses", "Mask", "Headset", "Goggles", "Balaclava", "Headband",
+           "Visor", "Tattoo", "Helmet", "Hood", "Crown", "Belt", "Cloak",
+           "Bag", "Veil", "Bow", "Button", "Earrings", "Fan", "Ring",
+           "Jewelry", "Headgear", "Hat", "Headdress", "Badge", "Pocket",
+           "Zipper", "Tie", "Sash", "Collar", "Necklace", "Boots", "Buckle",
+           "Shoes", "Scarf", "Harness", "Sandals", "Medallion", "Suspenders",
+           "Purse", "Amulet", "Ruffle", "Stethoscope", "Backpack", "Medal",
+           "Ribbon", "Cape", "Tassel", "Gloves", "Watch", "Sneakers", "Socks",
+           "Epaulettes", "Diaper", "Handcuffs", "Shawl", "Skates",
+           "Life Preserver", "Poncho"),
+  regex = c("(sun)?glass|monocle", "mask", "head(set|phone)", "goggle",
+            "balaclava", "headband", "visor", "tattoo", "helmet", "hood|cowl",
+            "crown|tiara", "belt|cummerbund", "cloak", "pouch|bag\\b", "veil",
+            "bow", "button", "earring", "fan\\b", "\\bring",
+            "jewel|gem|bead|br(o|a)ch", "headgear", "hat|cap|fez", "headdress",
+            "badge", "pocket", "zipper", "\\b(neck)?tie\\b", "sash", "collar",
+            "necklace|pend(a|e)nt|locket", "boot", "buckle", "\\bshoe",
+            "scarf|neckerchief|bandanna", "harness", "sandal", "medallion",
+            "suspender", "purse", "amulet", "ruffle|frill", "stethoscope",
+            "(back)?pack|knapsack", "medal", "ribbon", "cape", "tassel",
+            "glove|gauntlet", "watch", "sneaker", "sock|stocking", "epaulet",
+            "diaper", "handcuff", "shawl", "skate", "preserver", "poncho")
+)
+accessory.parts.df = do.call(
+  "bind_rows",
+  apply(
+    accessory.words.df, 1,
+    function(x) {
+      bind_rows(
+        heads.df %>%
+          filter(grepl(x[2], gsub("[^A-Za-z0-9 ]", "", tolower(part.name)))) %>%
+          mutate(accessory = x[1]),
+        hair.df %>%
+          filter(grepl(x[2], gsub("[^A-Za-z0-9 ]", "", tolower(part.name)))) %>%
+          mutate(accessory = x[1]),
+        clothes.df %>%
+          filter(grepl(x[2], gsub("[^A-Za-z0-9 ]", "", tolower(part.name)))) %>%
+          mutate(accessory = x[1]),
+        accessories.df %>%
+          filter(grepl(x[2], gsub("[^A-Za-z0-9 ]", "", tolower(part.name)))) %>%
+          mutate(accessory = x[1])
+      )
+    }
+  )
+)
+
 # Update theme count table.
 theme.counts.df = theme.counts.df %>%
   left_join(heads.df %>%
@@ -276,6 +337,10 @@ theme.counts.df = theme.counts.df %>%
               mutate(total.clothes = theme.num.parts) %>%
               select(theme.name, total.clothes) %>%
               distinct(),
+            by = c("theme.name")) %>%
+  left_join(accessory.parts.df %>%
+              group_by(theme.name) %>%
+              summarize(total.accessories = sum(num.parts)),
             by = c("theme.name"))
 
 # Function to create a theme picker input.  We will need several of these.
