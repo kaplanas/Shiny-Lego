@@ -131,17 +131,10 @@ shinyServer(function(input, output) {
     selected.themes = input$demographicsSetThemePicker
     selected.ethnicities = input$demographicsSetEthnicityPicker
     selected.genders = input$demographicsSetGenderPicker
-    # Get all the unique hexadecimal colors and, for each one, whether text
-    # printed over that color should be black or white.
-    unique.colors = sort(unique(heads.df$color.hex))
-    text.color = data.frame(heads.df %>%
-                              select(color.hex, text.color.hex) %>%
-                              distinct() %>%
-                              arrange(color.hex))$text.color.hex
     # Get the dataset to display.  Filter if necessary.
     temp.heads.df = heads.df %>%
       dplyr::select(theme.name, set.name, part.name, gender,
-                    color.name, color.hex, num.parts)
+                    color.name, color.hex, text.color.hex, num.parts)
     if(length(selected.themes) > 0) {
       temp.heads.df = temp.heads.df %>%
         filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes))
@@ -155,16 +148,11 @@ shinyServer(function(input, output) {
         filter(gender %in% selected.genders)
     }
     # Display the dataset.
-    datatable(temp.heads.df,
-              options = list(pageLength = 100,
-                             columnDefs = list(list(targets = 5,
-                                                    visible = F))),
-              rownames = F,
-              colnames = c("Theme", "Set", "Part", "Gender", "Color",
-                           "Color hex", "Number of pieces")) %>%
-      formatStyle("color.hex", target = "row",
-                  backgroundColor = styleEqual(unique.colors, unique.colors),
-                  color = styleEqual(unique.colors, text.color))
+    part.table(temp.heads.df,
+               columns.to.hide = c(5, 6),
+               column.names = c("Theme", "Set", "Part", "Gender", "Color",
+                                "Color hex", "Text color hex",
+                                "Number of pieces"))
   })
   
   #############################################################################

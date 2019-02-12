@@ -650,3 +650,26 @@ treemap.graph = function(data.df, level.settings) {
   ) %>%
     hw_grid()
 }
+
+# Function to create a DataTable of parts.
+part.table = function(data.df, column.names, columns.to.hide) {
+  # We don't do much here, but we might want to in the future.
+  temp.df = data.df
+  # Get all the unique hexadecimal colors and, for each one, whether text
+  # printed over that color should be black or white.
+  unique.colors = sort(unique(temp.df$color.hex))
+  text.color = data.frame(temp.df %>%
+                            select(color.hex, text.color.hex) %>%
+                            distinct() %>%
+                            arrange(color.hex))$text.color.hex
+  # Create the DataTable.
+  datatable(temp.df,
+            options = list(pageLength = 100,
+                           columnDefs = list(list(targets = columns.to.hide,
+                                                  visible = F))),
+            rownames = F,
+            colnames = column.names) %>%
+    formatStyle("color.hex", target = "row",
+                backgroundColor = styleEqual(unique.colors, unique.colors),
+                color = styleEqual(unique.colors, text.color))
+}
