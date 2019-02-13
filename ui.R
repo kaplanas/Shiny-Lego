@@ -32,11 +32,7 @@ shinyUI(navbarPage(
           tags$p(HTML("<b>Hover</b> to see the part name.")),
           tags$p(HTML("Area is proportional to the <b>number of pieces</b> across all sets.")),
           tags$p(HTML("<b>\"Ethnicity\"</b> is the color of the piece.")),
-          tags$p(HTML("<b>Gender</b> is inferred from keywords in the part name.")),
-          tags$ul(
-            tags$li("Male: \"Male\", \"Beard\", \"Moustache\", \"Stubble\", \"Goatee\", \"Sideburn\""),
-            tags$li("Female: \"Female\", \"Girl\", \"Woman\"")
-          ),
+          tags$p(HTML("<b>Gender</b> is inferred from keywords in the part name (\"Male\", \"Female\", etc., plus references to facial hair).")),
           tags$p("Some heads are not labeled male/female but contain the name of a character of known gender (e.g., \"Han Solo\").  Incorporating this information would require a hand-maintained list of character names and their genders; I haven't done this.")
         ),
             
@@ -263,11 +259,13 @@ shinyUI(navbarPage(
       # Polar plot of moods.
       tabPanel(
         
-        "Mood frequency",
+        "Mood counts",
         
         # Sidebar panel for controls.
         sidebarPanel(
-          theme.picker.input("moodsPolarThemePicker", "total.moods")
+          theme.picker.input("moodsPolarThemePicker", "total.moods"),
+          tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
+          tags$p(HTML("<b>Mood</b> is inferred from keywords in the part name."))
         ),
         
         # Main panel with plot.

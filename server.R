@@ -417,12 +417,13 @@ shinyServer(function(input, output) {
   #############################################################################
   
   #############################################################################
-  # Mood frequency                                                            #
+  # Mood counts                                                               #
   #############################################################################
   
   output$moodsPolarPlotUI = renderUI({
     temp.moods.df = moods.df %>%
       mutate(facet.name = "")
+    temp.moods.df$mood.and.color = factor(paste(temp.moods.df$mood, temp.moods.df$mood.color))
     # Store the themes chosen by the user in a variable with a shorter name.
     selected.themes = input$moodsPolarThemePicker
     # Filter if necessary.
@@ -431,10 +432,13 @@ shinyServer(function(input, output) {
         filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes)) %>%
         mutate(facet.name = theme.name)
     }
-    # Make the plot.
+    # Get the count for each mood.
     temp.moods.df = temp.moods.df %>%
-      group_by(mood, mood.color, facet.name) %>%
-      summarize(total.parts = sum(num.parts))
+      group_by(mood.and.color, facet.name) %>%
+      summarize(total.parts = sum(num.parts)) %>%
+      complete(facet.name, mood.and.color, fill = list(total.parts = 0)) %>%
+      separate(mood.and.color, into = c("mood", "mood.color"), sep = " ")
+    # Make the plot.
     lapply(
       sort(unique(as.character(temp.moods.df$facet.name))),
       function(x) {
@@ -443,7 +447,7 @@ shinyServer(function(input, output) {
                     "column",
                     hcaes(x = mood, y = total.parts, color = mood.color)) %>%
           hc_chart(polar = T) %>%
-          hc_pane(startAngle = 270) %>%
+          hc_pane(startAngle = 90) %>%
           hc_tooltip(borderWidth = 3,
                      headerFormat = "<span><b>{point.key}:</b></span>\u00A0",
                      pointFormat = "{point.y}") %>%
