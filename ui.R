@@ -273,6 +273,59 @@ shinyUI(navbarPage(
           uiOutput("moodsPolarPlotUI")
         )
         
+      ),
+      
+      # Bar plot of moods.
+      tabPanel(
+        
+        "Mood percents",
+        
+        # Sidebar panel for controls.
+        sidebarPanel(
+          pickerInput(
+            "moodsMoodPicker", "Choose mood to plot:",
+            choices = c("Happy", "Sad", "Angry", "Afraid"),
+            selected = "Happy",
+            multiple = F
+          ),
+          pickerInput(
+            "moodsOrderPicker", "Order by:",
+            choices = c("Percent of pieces with mood", "Total pieces", "Theme name"),
+            selected = "Percent of pieces with mood",
+            multiple = F
+          ),
+          tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red"))
+        ),
+        
+        # Main panel with plot.
+        mainPanel(
+          highchartOutput("moodsBarPlot",
+                          width = "700px", height = "2000px")
+        )
+        
+      ),
+      
+      # Table for finding sets with pieces with a particular mood.
+      tabPanel(
+        
+        "Find sets with a specific mood",
+        
+        # Sidebar panel for controls.
+        sidebarPanel(
+          theme.picker.input("moodsSetThemePicker", "total.heads"),
+          pickerInput(
+            "moodsSetMoodPicker", "Filter to one or more moods:",
+            choices = c("Happy", "Sad", "Angry", "Afraid"),
+            options = list(`actions-box` = T),
+            multiple = T
+          )
+        ),
+        
+        # Main panel with table.
+        mainPanel(
+          dataTableOutput("moodsSets")
+        )
+        
       )
       
     )

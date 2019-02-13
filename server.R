@@ -464,4 +464,106 @@ shinyServer(function(input, output) {
       hw_grid()
   })
   
+  #############################################################################
+  # Mood percents                                                             #
+  #############################################################################
+  
+  output$moodsBarPlot = renderHighchart({
+    # Get one row per theme, with the relevant columns.
+    temp.moods.df = moods.df %>%
+      inner_join(theme.counts.df, by = c("theme.name")) %>%
+      group_by(theme.name, total.heads, mood, mood.color) %>%
+      summarize(total.parts = sum(num.parts)) %>%
+      ungroup() %>%
+      mutate(pct.heads = (total.parts / total.heads) * 100,
+             total.heads.col = log(total.heads) / max(log(total.heads))) %>%
+      filter(total.heads > 1)
+    # Plot the color of the mood, with themes with fewer pieces moved towards
+    # white.
+    temp.moods.df$color.to.plot = unlist(apply(
+      temp.moods.df, 1,
+      function(x) {
+        rgb(colorRamp(c("#FFFFFF",
+                        as.character(x[["mood.color"]])))(as.numeric(x[["total.heads.col"]])),
+            maxColorValue = 255)
+      }
+    ))
+    # Filter to the mood specified by the user.
+    temp.moods.df = temp.moods.df %>%
+      filter(mood == input$moodsMoodPicker) %>%
+      filter(!is.na(pct.heads))
+    # Sort by the column specified by the user.
+    if(input$moodsOrderPicker == "Percent of pieces with mood") {
+      temp.moods.df = temp.moods.df %>%
+        arrange(desc(pct.heads), theme.name)
+    } else if(input$moodsOrderPicker == "Total pieces") {
+      temp.moods.df  = temp.moods.df %>%
+        arrange(desc(total.heads), theme.name)
+    } else if(input$moodsOrderPicker == "Theme name") {
+      temp.moods.df = temp.moods.df %>%
+        arrange(theme.name)
+    }
+    temp.moods.df$theme.name = factor(temp.moods.df$theme.name,
+                                      levels = temp.moods.df$theme.name)
+    # Set the format for the tooltip.
+    point.format = paste(
+      " ({point.num_pieces} pieces)</span><br/><span>",
+      input$moodsMoodPicker,
+      ":\u00A0{point.y}</span>",
+      sep = ""
+    )
+    # Make the plot.
+    highchart() %>%
+      hc_chart(type = "bar") %>%
+      hc_xAxis(categories = temp.moods.df$theme.name) %>%
+      hc_add_series(pointPadding = 0,
+                    data = temp.moods.df %>%
+                      mutate(y = pct.heads,
+                             num_pieces = total.heads),
+                    colorByPoint = T,
+                    colors = temp.moods.df$color.to.plot,
+                    borderColor = "#000000") %>%
+      hc_tooltip(headerFormat = "<span><b>{point.key}</b>",
+                 pointFormat = point.format,
+                 valueDecimals = 2) %>%
+      hc_legend(enabled = F) %>%
+      hc_yAxis(max = 100)
+  })
+  
+  #############################################################################
+  # Find sets with a specific mood                                            #
+  #############################################################################
+  
+  output$moodsSets = renderDataTable({
+    # Store the themes and moods chosen by the user in variables with shorter
+    # names.
+    selected.themes = input$moodsSetThemePicker
+    selected.moods = input$moodsSetMoodPicker
+    # Get the dataset to display.  Filter if necessary.
+    temp.moods.df = moods.df %>%
+      dplyr::select(theme.name, set.name, part.name, color.name, color.hex,
+                    text.color.hex, num.parts, mood) %>%
+      distinct() %>%
+      group_by(theme.name, set.name, part.name, color.name, color.hex,
+               text.color.hex, num.parts) %>%
+      summarize(moods = paste0(mood, collapse = ", ")) %>%
+      ungroup()
+    if(length(selected.themes) > 0) {
+      temp.moods.df = temp.moods.df %>%
+        filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes))
+    }
+    if(length(selected.moods) > 0) {
+      temp.moods.df = temp.moods.df %>%
+        filter(grepl(paste(paste0(selected.moods, collapse = "|"),
+                           "\\b", sep = ""),
+                     moods))
+    }
+    # Display the dataset.
+    part.table(temp.moods.df,
+               columns.to.hide = c(4, 5),
+               column.names = c("Theme", "Set", "Part", "Moods", "Color",
+                                "Color hex", "Text color hex",
+                                "Number of pieces"))
+  })
+  
 })
