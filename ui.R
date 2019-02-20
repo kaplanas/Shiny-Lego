@@ -330,6 +330,62 @@ shinyUI(navbarPage(
       
     )
     
+  ),
+  
+  # Ecology.
+  tabPanel(
+    
+    "Ecology",
+    
+    # One tab for each plot/table.
+    tabsetPanel(
+      
+      type = "tabs",
+      
+      # Dendrogram of plants.
+      tabPanel(
+        
+        "Plants",
+        
+        # Sidebar panel for controls.
+        sidebarPanel(
+          tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
+          tags$p(span(HTML("<b>Hover</b> over a node to see a list of pieces.  Filled nodes have no pieces."))),
+          tags$p(span(HTML("<b>Double-click</b> on a node to collapse its daughters.")))
+        ),
+        
+        # Main panel with dendrogram.
+        mainPanel(
+          visNetworkOutput("plantsDendrogram",
+                           width = "700px",
+                           height = "700px")
+        )
+        
+      ),
+      
+      # Dendrogram of animals.
+      tabPanel(
+        
+        "Animals",
+        
+        # Sidebar panel for controls.
+        sidebarPanel(
+          tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
+          tags$p(span(HTML("<b>Hover</b> over a node to see a list of pieces.  Filled nodes have no pieces."))),
+          tags$p(span(HTML("<b>Double-click</b> on a node to collapse its daughters.")))
+        ),
+        
+        # Main panel with dendrogram.
+        mainPanel(
+          visNetworkOutput("animalsDendrogram",
+                           width = "1000px",
+                           height = "1000px")
+        )
+        
+      )
+      
+    )
+    
   )
   
 ))

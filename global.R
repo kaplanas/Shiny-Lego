@@ -13,6 +13,8 @@ library(highcharter)
 library(purrr)
 library(stringr)
 library(fuzzyjoin)
+library(lexicon)
+library(visNetwork)
 
 theme_set(theme_bw())
 
@@ -347,6 +349,154 @@ fashion.items.df = lego.df %>%
   filter(!is.na(hair.styles) |
            !is.na(clothing.types) |
            !is.na(accessories))
+
+# Get a quick mapping from wordforms to lemmas.
+data(hash_lemmas)
+
+# Get plant and animal pieces.
+ecology.df = lego.df %>%
+  filter(part.category.name == "Plants and Animals")
+
+# Get all the words used in plant/animal pieces, and their frequencies.
+ecology.words.df = data.frame(word = gsub("[^A-Za-z ]", "",
+                                          tolower(unlist(strsplit(sort(unique(ecology.df$part.name)),
+                                                                  " "))))) %>%
+  group_by(word) %>%
+  summarize(freq = n()) %>%
+  arrange(desc(freq)) %>%
+  ungroup()
+
+# Create a directed graph whose edges go from words to their hyponyms.  Plants
+# and animals only.  Remove certain subtypes of animals (e.g., "predatory
+# animal") to reduce the number of distinct ways a piece may be classified.
+ecology.edges = hypernyms.df %>%
+  filter(is.element(A_LEXDOMAINNAME, c("noun.animal", "noun.plant"))) %>%
+  mutate(to = A_LEMMA,
+         from.synset = C_SYNSETID,
+         type = gsub("noun\\.", "", A_LEXDOMAINNAME)) %>%
+  select(to, from.synset, type) %>%
+  distinct() %>%
+  left_join(hypernyms.df, by = c("from.synset" = "A_SYNSETID")) %>%
+  mutate(from = A_LEMMA) %>%
+  select(from, to, type) %>%
+  distinct()
+ecology.edges = ecology.edges %>%
+  filter(!is.element(to, c("predatory animal", "domesticated animal",
+                           "predator", "young", "male", "female",
+                           "offspring", "domestic animal", "insectivore",
+                           "herb"))) %>%
+  filter(to != "chestnut" | !grepl("equus|callus|horse", from))
+ecology.edges = bind_rows(
+  ecology.edges,
+  data.frame(
+    from = c("feline", "bovid", "equine"),
+    to = c("kitten", "lamb", "foal"),
+    type = rep("animal", 3),
+    stringsAsFactors = F
+  )
+)
+ecology.igraph = graph_from_data_frame(ecology.edges)
+
+# For each word in the plant/animal pieces, if that word is a plant/animal
+# word, get the shortest path from that word to "plant"/"animal" and add that
+# path to the filtered graph of edges.
+ecology.edges.filtered = data.frame()
+for(i in 1:nrow(ecology.words.df)) {
+  current.word = as.character(ecology.words.df$word[i])
+  current.lemma = hash_lemmas$lemma[hash_lemmas$token == current.word]
+  if(length(current.lemma) == 0) {
+    current.lemma = current.word
+  }
+  current.types = unique(ecology.edges$type[ecology.edges$to == current.lemma])
+  if(!is.element(current.lemma, c("stud", "spike", "head", "gray", "shell",
+                                  "ass", "fang", "plug", "royal", "grey",
+                                  "ornamental", "olive")) &
+     !is.element(current.lemma, tolower(colors.df$name))) {
+    for(type in current.types) {
+      path = suppressWarnings(shortest_paths(ecology.igraph,
+                                             to = current.lemma, from = type)$vpath[[1]])
+      if(length(path) > 0) {
+        for(j in 1:(length(path) - 1)) {
+          ecology.edges.filtered = bind_rows(
+            ecology.edges.filtered,
+            data.frame(
+              from = path[j]$name,
+              to = path[j + 1]$name,
+              type = type,
+              depth = j,
+              stringsAsFactors = F
+            )
+          )
+        }
+      }
+    }
+  }
+}
+rm(i, current.word, current.lemma, current.types, type, path, j)
+ecology.edges.filtered = ecology.edges.filtered %>%
+  distinct()
+
+# Create data frames of edges and nodes.
+ecology.edges.vis.df = ecology.edges.filtered %>%
+  mutate(color = "black")
+ecology.vertices.vis.df = ecology.vertices.filtered %>%
+  left_join(ecology.edges.filtered, by = c("name" = "to", "type")) %>%
+  mutate(depth = ifelse(is.na(depth), 0, depth)) %>%
+  select(name, depth, type) %>%
+  left_join(hash_lemmas, by = c("name" = "lemma")) %>%
+  group_by(name, depth, type) %>%
+  summarize(node.regex = paste0(token, collapse = "|")) %>%
+  ungroup() %>%
+  mutate(id = name,
+         title = name,
+         label = name,
+         node.regex = paste("\\b(", name,
+                            ifelse(node.regex == "NA",
+                                   "", paste("|", node.regex, sep = "")),
+                            ")\\b", sep = "")) %>%
+  select(id, label, title, depth, node.regex, type)
+
+# For each part, determine which node that part is associated with (by matching
+# keywords in the part name to node names).  If a part matches multiple nodes,
+# choose the one further down in the tree.
+ecology.parts.nodes.df = ecology.df %>%
+  group_by(part.id, part.name, color.hex, text.color.hex) %>%
+  summarize(total.parts = sum(total.parts)) %>%
+  ungroup() %>%
+  mutate(lower.part.name = tolower(part.name)) %>%
+  regex_inner_join(ecology.vertices.vis.df,
+                   by = c(lower.part.name = "node.regex"),
+                   ignore_case = T) %>%
+  group_by(part.id, part.name) %>%
+  filter(depth == max(depth)) %>%
+  ungroup() %>%
+  select(node.name = id, part.id, part.name, color.hex, text.color.hex, total.parts)
+
+# Add the total number of parts to each node.
+ecology.vertices.vis.df = ecology.vertices.vis.df %>%
+  left_join(ecology.parts.nodes.df, by = c("id" = "node.name")) %>%
+  arrange(id, desc(total.parts)) %>%
+  group_by(id, label, type, node.regex) %>%
+  summarize(value = coalesce(sum(total.parts) ^ 0.5, 5),
+            any.pieces = sum(ifelse(is.na(total.parts), 0, 1)) > 0,
+            title = paste("<div style=\"background-color: white; overflow-y: auto; max-height: 300px\">",
+                          paste0(paste("<span style=\"color:",
+                                       text.color.hex,
+                                       "; background-color:",
+                                       color.hex,
+                                       "; display: inline-block; margin: 3px; padding: 3px\">",
+                                       part.name,
+                                       " (",
+                                       total.parts,
+                                       ")</span>",
+                                       sep = ""),
+                                 collapse = "</br>"),
+                          "</div>",
+                          sep = "")) %>%
+  ungroup() %>%
+  mutate(title = ifelse(any.pieces, title, NA),
+         color.background = ifelse(any.pieces, "white", "black"),
+         color.border = "black")
 
 # Update theme count table.
 theme.counts.df = theme.counts.df %>%

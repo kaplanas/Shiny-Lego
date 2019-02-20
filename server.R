@@ -566,4 +566,42 @@ shinyServer(function(input, output) {
                                 "Number of pieces"))
   })
   
+  #############################################################################
+  #############################################################################
+  ## Ecology                                                                 ##
+  #############################################################################
+  #############################################################################
+  
+  #############################################################################
+  # Plants                                                                    #
+  #############################################################################
+  
+  output$plantsDendrogram = renderVisNetwork({
+    visNetwork(ecology.vertices.vis.df %>%
+                 filter(type == "plant"),
+               ecology.edges.vis.df %>%
+                 filter(type == "plant")) %>%
+      visNodes(scaling = list(min = 1, max = 100)) %>%
+      visHierarchicalLayout(direction = "UD",
+                            sortMethod = "directed") %>%
+      visOptions(collapse = list(enabled = T,
+                                 clusterOptions = list(color = "red")))
+  })
+  
+  #############################################################################
+  # Animals                                                                   #
+  #############################################################################
+  
+  output$animalsDendrogram = renderVisNetwork({
+    visNetwork(ecology.vertices.vis.df %>%
+                 filter(type == "animal"),
+               ecology.edges.vis.df %>%
+                 filter(type == "animal")) %>%
+      visNodes(scaling = list(min = 1, max = 100)) %>%
+      visHierarchicalLayout(direction = "UD",
+                            sortMethod = "directed") %>%
+      visOptions(collapse = list(enabled = T,
+                                 clusterOptions = list(color = "red")))
+  })
+  
 })
