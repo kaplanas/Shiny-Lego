@@ -458,45 +458,25 @@ ecology.vertices.vis.df = ecology.vertices.filtered %>%
 
 # For each part, determine which node that part is associated with (by matching
 # keywords in the part name to node names).  If a part matches multiple nodes,
-# choose the one further down in the tree.
+# choose the one furthest down in the tree.
 ecology.parts.nodes.df = ecology.df %>%
-  group_by(part.id, part.name, color.hex, text.color.hex) %>%
+  group_by(part.id, part.name, color.hex, text.color.hex, theme.name) %>%
   summarize(total.parts = sum(total.parts)) %>%
   ungroup() %>%
   mutate(lower.part.name = tolower(part.name)) %>%
   regex_inner_join(ecology.vertices.vis.df,
                    by = c(lower.part.name = "node.regex"),
                    ignore_case = T) %>%
-  group_by(part.id, part.name) %>%
+  group_by(part.id, part.name, type) %>%
   filter(depth == max(depth)) %>%
   ungroup() %>%
-  select(node.name = id, part.id, part.name, color.hex, text.color.hex, total.parts)
+  select(node.name = id, part.id, part.name, color.hex, text.color.hex,
+         total.parts, theme.name, type)
 
-# Add the total number of parts to each node.
+# Add the parts to each node.  Don't group here; that happens just before
+# plotting, because we might or might not need to facet by theme.
 ecology.vertices.vis.df = ecology.vertices.vis.df %>%
-  left_join(ecology.parts.nodes.df, by = c("id" = "node.name")) %>%
-  arrange(id, desc(total.parts)) %>%
-  group_by(id, label, type, node.regex) %>%
-  summarize(value = coalesce(sum(total.parts) ^ 0.5, 5),
-            any.pieces = sum(ifelse(is.na(total.parts), 0, 1)) > 0,
-            title = paste("<div style=\"background-color: white; overflow-y: auto; max-height: 300px\">",
-                          paste0(paste("<span style=\"color:",
-                                       text.color.hex,
-                                       "; background-color:",
-                                       color.hex,
-                                       "; display: inline-block; margin: 3px; padding: 3px\">",
-                                       part.name,
-                                       " (",
-                                       total.parts,
-                                       ")</span>",
-                                       sep = ""),
-                                 collapse = "</br>"),
-                          "</div>",
-                          sep = "")) %>%
-  ungroup() %>%
-  mutate(title = ifelse(any.pieces, title, NA),
-         color.background = ifelse(any.pieces, "white", "black"),
-         color.border = "black")
+  left_join(ecology.parts.nodes.df, by = c("id" = "node.name", "type"))
 
 # Update theme count table.
 theme.counts.df = theme.counts.df %>%
@@ -526,6 +506,16 @@ theme.counts.df = theme.counts.df %>%
   left_join(moods.df %>%
               group_by(theme.name) %>%
               summarize(total.moods = sum(num.parts)),
+            by = c("theme.name")) %>%
+  left_join(ecology.parts.nodes.df %>%
+              filter(type == "plant") %>%
+              group_by(theme.name) %>%
+              summarize(total.plants = sum(total.parts)),
+            by = c("theme.name")) %>%
+  left_join(ecology.parts.nodes.df %>%
+              filter(type == "animal") %>%
+              group_by(theme.name) %>%
+              summarize(total.animals = sum(total.parts)),
             by = c("theme.name"))
 
 # Function to create a theme picker input.  We will need several of these.
@@ -885,4 +875,131 @@ part.table = function(data.df, column.names, columns.to.hide) {
     formatStyle("color.hex", target = "row",
                 backgroundColor = styleEqual(unique.colors, unique.colors),
                 color = styleEqual(unique.colors, text.color))
+}
+
+# Function to determine the dimensions we need for faceting a dendrogram.
+dendrogram.facet.dims = function(num.themes) {
+  # Get the coordinates of the facets.  We're using bootstrap, so the number of
+  # columns has to be a divisor of 12.
+  num.cols = wrap_dims(num.themes)[2]
+  while(!is.element(num.cols, c(1, 2, 3, 4, 6, 12))) {
+    num.cols = num.cols - 1
+  }
+  num.rows = ceiling(num.themes / num.cols)
+  col.width = 12 / num.cols
+  list(num.cols = num.cols,
+       num.rows = num.rows,
+       col.width = col.width)
+}
+
+# Function to create the widgets for a faceted dendrogram.
+dendrogram.facet.uis = function(facet.info, output.string) {
+  do.call(
+    tagList,
+    lapply(1:facet.info[["num.rows"]],
+           function(x) {
+             fluidRow(
+               do.call(
+                 tagList,
+                 lapply(1:facet.info[["num.cols"]],
+                        function(y) {
+                          column(facet.info[["col.width"]],
+                                 visNetworkOutput({paste(output.string,
+                                                         "dendrogram",
+                                                         x, y,
+                                                         sep = "")}))
+                        })
+               )
+             )
+           })
+  )
+}
+
+# Function to create a list with one element for each facet of a dendrogram we
+# want to plot.  Each element of the list contains the dendrogram itself, plus
+# various pieces of info about how to plot the facet.
+dendrogram.facets = function(vertices.df,
+                             edges.df,
+                             themes.for.faceting,
+                             facet.info,
+                             output.string) {
+  if(length(themes.for.faceting) == 0) {
+    vertices.df = vertices.df %>%
+      mutate(theme.name = "")
+    themes.to.facet = c("")
+  } else {
+    themes.to.facet = sort(gsub(" \\([0-9]+\\)$", "", themes.for.faceting))
+  }
+  current.theme.index = 1
+  facets = list()
+  for(i in 1:facet.info[["num.rows"]]) {
+    for(j in 1:facet.info[["num.cols"]]) {
+      if(current.theme.index <= length(themes.to.facet)) {
+        current.facet = list(row.index = i,
+                             col.index = j,
+                             id = paste(output.string, "dendrogram", i, j,
+                                        sep = ""))
+        temp.vertices.df = vertices.df %>%
+          filter(is.na(theme.name) |
+                   theme.name == themes.to.facet[current.theme.index])
+        temp.edges.df = edges.df %>%
+          semi_join(temp.vertices.df, by = c("to" = "id"))
+        found.all.vertices = F
+        while(!found.all.vertices) {
+          edges.to.add = edges.df %>%
+            semi_join(temp.vertices.df, by = c("to" = "id"))
+          vertices.to.add = vertices.df %>%
+            semi_join(edges.to.add, by = c("id" = "from")) %>%
+            anti_join(temp.vertices.df, by = c("id"))
+          temp.vertices.df = bind_rows(
+            temp.vertices.df,
+            vertices.to.add
+          ) %>%
+            distinct()
+          temp.edges.df = bind_rows(
+            temp.edges.df,
+            edges.to.add
+          ) %>%
+            distinct()
+          if(nrow(vertices.to.add) == 0) {
+            found.all.vertices = T
+          }
+        }
+        temp.vertices.df = temp.vertices.df %>%
+          arrange(id, desc(total.parts)) %>%
+          group_by(id, label, type, node.regex) %>%
+          summarize(value = coalesce(sum(total.parts) ^ 0.5, 2),
+                    any.pieces = sum(ifelse(is.na(total.parts), 0, 1)) > 0,
+                    title = paste("<div style=\"background-color: white; overflow-y: auto; max-height: 300px\">",
+                                  paste0(paste("<span style=\"color:",
+                                               text.color.hex,
+                                               "; background-color:",
+                                               color.hex,
+                                               "; display: inline-block; margin: 3px; padding: 3px\">",
+                                               part.name,
+                                               " (",
+                                               total.parts,
+                                               ")</span>",
+                                               sep = ""),
+                                         collapse = "</br>"),
+                                  "</div>",
+                                  sep = "")) %>%
+          ungroup() %>%
+          mutate(title = ifelse(any.pieces, title, NA),
+                 color.background = ifelse(any.pieces, "white", "black"),
+                 color.border = "black")
+        current.facet[["dendrogram"]] = visNetwork(temp.vertices.df,
+                                                   temp.edges.df,
+                                                   main = themes.to.facet[current.theme.index]) %>%
+          visNodes(scaling = list(min = 1, max = 100)) %>%
+          visHierarchicalLayout(direction = "UD",
+                                sortMethod = "directed") %>%
+          visOptions(collapse = list(enabled = T,
+                                     clusterOptions = list(color = "red")))
+        facets[[current.theme.index]] = current.facet
+        current.theme.index = current.theme.index + 1
+      }
+    }
+  }
+  facets
 }

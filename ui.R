@@ -349,16 +349,16 @@ shinyUI(navbarPage(
         
         # Sidebar panel for controls.
         sidebarPanel(
+          theme.picker.input("plantsDendrogramThemePicker", "total.plants"),
           tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
           tags$p(span(HTML("<b>Hover</b> over a node to see a list of pieces.  Filled nodes have no pieces."))),
-          tags$p(span(HTML("<b>Double-click</b> on a node to collapse its daughters.")))
+          tags$p(span(HTML("<b>Double-click</b> on a node to collapse its daughters."))),
+          tags$p(span(HTML("<b>Scroll</b> to zoom in or out.  <b>Click and drag</b> to move the tree.")))
         ),
         
         # Main panel with dendrogram.
         mainPanel(
-          visNetworkOutput("plantsDendrogram",
-                           width = "700px",
-                           height = "700px")
+          uiOutput("plantsDendrogram")
         )
         
       ),
@@ -370,6 +370,7 @@ shinyUI(navbarPage(
         
         # Sidebar panel for controls.
         sidebarPanel(
+          theme.picker.input("animalsDendrogramThemePicker", "total.animals"),
           tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
           tags$p(span(HTML("<b>Hover</b> over a node to see a list of pieces.  Filled nodes have no pieces."))),
           tags$p(span(HTML("<b>Double-click</b> on a node to collapse its daughters.")))
@@ -377,9 +378,7 @@ shinyUI(navbarPage(
         
         # Main panel with dendrogram.
         mainPanel(
-          visNetworkOutput("animalsDendrogram",
-                           width = "1000px",
-                           height = "1000px")
+          uiOutput("animalsDendrogram")
         )
         
       )

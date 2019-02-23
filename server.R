@@ -576,32 +576,54 @@ shinyServer(function(input, output) {
   # Plants                                                                    #
   #############################################################################
   
-  output$plantsDendrogram = renderVisNetwork({
-    visNetwork(ecology.vertices.vis.df %>%
-                 filter(type == "plant"),
-               ecology.edges.vis.df %>%
-                 filter(type == "plant")) %>%
-      visNodes(scaling = list(min = 1, max = 100)) %>%
-      visHierarchicalLayout(direction = "UD",
-                            sortMethod = "directed") %>%
-      visOptions(collapse = list(enabled = T,
-                                 clusterOptions = list(color = "red")))
+  plant.facet.info = reactive({
+    dendrogram.facet.dims(max(length(input$plantsDendrogramThemePicker), 1))
+  })
+  output$plantsDendrogram = renderUI({
+    dendrogram.facet.uis(plant.facet.info(),
+                         "plant")
+  })
+  observe({
+    plant.facets = dendrogram.facets(ecology.vertices.vis.df %>%
+                                       filter(type == "plant"),
+                                     ecology.edges.vis.df %>%
+                                       filter(type == "plant"),
+                                     input$plantsDendrogramThemePicker,
+                                     plant.facet.info(),
+                                     "plant")
+    for(dendrogram in plant.facets) {
+      local({
+        my.dendrogram = dendrogram
+        output[[my.dendrogram[["id"]]]] = renderVisNetwork({my.dendrogram[["dendrogram"]]})
+      })
+    }
   })
   
   #############################################################################
   # Animals                                                                   #
   #############################################################################
   
-  output$animalsDendrogram = renderVisNetwork({
-    visNetwork(ecology.vertices.vis.df %>%
-                 filter(type == "animal"),
-               ecology.edges.vis.df %>%
-                 filter(type == "animal")) %>%
-      visNodes(scaling = list(min = 1, max = 100)) %>%
-      visHierarchicalLayout(direction = "UD",
-                            sortMethod = "directed") %>%
-      visOptions(collapse = list(enabled = T,
-                                 clusterOptions = list(color = "red")))
+  animal.facet.info = reactive({
+    dendrogram.facet.dims(max(length(input$animalsDendrogramThemePicker), 1))
+  })
+  output$animalsDendrogram = renderUI({
+    dendrogram.facet.uis(animal.facet.info(),
+                         "animal")
+  })
+  observe({
+    animal.facets = dendrogram.facets(ecology.vertices.vis.df %>%
+                                        filter(type == "animal"),
+                                      ecology.edges.vis.df %>%
+                                        filter(type == "animal"),
+                                      input$animalsDendrogramThemePicker,
+                                      animal.facet.info(),
+                                      "animal")
+    for(dendrogram in animal.facets) {
+      local({
+        my.dendrogram = dendrogram
+        output[[my.dendrogram[["id"]]]] = renderVisNetwork({my.dendrogram[["dendrogram"]]})
+      })
+    }
   })
   
 })
