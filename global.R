@@ -570,6 +570,10 @@ theme.counts.df = theme.counts.df %>%
               filter(type == "animal") %>%
               group_by(theme.name) %>%
               summarize(total.animals = sum(total.parts)),
+            by = c("theme.name")) %>%
+  left_join(ecology.parts.nodes.df %>%
+              group_by(theme.name) %>%
+              summarize(total.plants.animals = sum(total.parts)),
             by = c("theme.name"))
 
 # Function to create a theme picker input.  We will need several of these.

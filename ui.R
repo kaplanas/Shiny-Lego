@@ -353,7 +353,8 @@ shinyUI(navbarPage(
           tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
           tags$p(span(HTML("<b>Hover</b> over a node to see a list of pieces.  Filled nodes have no pieces."))),
           tags$p(span(HTML("<b>Double-click</b> on a node to collapse its daughters."))),
-          tags$p(span(HTML("<b>Scroll</b> to zoom in or out.  <b>Click and drag</b> to move the tree.")))
+          tags$p(span(HTML("<b>Scroll</b> to zoom in or out.  <b>Click and drag</b> to move the tree."))),
+          tags$p(span(HTML("<b>\"Species\"</b> (very roughly speaking) is inferred from keywords in the part name.  <b>Phylogenetic trees</b> (even rougher) are constructed from hypernyms in WordNet.")))
         ),
         
         # Main panel with dendrogram.
@@ -373,12 +374,33 @@ shinyUI(navbarPage(
           theme.picker.input("animalsDendrogramThemePicker", "total.animals"),
           tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
           tags$p(span(HTML("<b>Hover</b> over a node to see a list of pieces.  Filled nodes have no pieces."))),
-          tags$p(span(HTML("<b>Double-click</b> on a node to collapse its daughters.")))
+          tags$p(span(HTML("<b>Double-click</b> on a node to collapse its daughters."))),
+          tags$p(span(HTML("<b>\"Species\"</b> (very roughly speaking) is inferred from keywords in the part name.  <b>Phylogenetic trees</b> (even rougher) are constructed from hypernyms in WordNet.")))
         ),
         
         # Main panel with dendrogram.
         mainPanel(
           uiOutput("animalsDendrogram")
+        )
+        
+      ),
+      
+      # Table for finding sets with pieces for a particular plant/animal.
+      tabPanel(
+        
+        "Find sets with a specific plant or animal",
+        
+        # Sidebar panel for controls.
+        sidebarPanel(
+          theme.picker.input("ecologySetThemePicker", "total.plants.animals"),
+          color.picker.input("ecologySetEthnicityPicker",
+                             heads.df,
+                             "Filter to one or more colors")
+        ),
+        
+        # Main panel with table.
+        mainPanel(
+          dataTableOutput("ecologySets")
         )
         
       )

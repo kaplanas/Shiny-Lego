@@ -634,4 +634,33 @@ shinyServer(function(input, output) {
     }
   })
   
+  #############################################################################
+  # Find sets with a specific plant or animal                                 #
+  #############################################################################
+  
+  output$ecologySets = renderDataTable({
+    # Store the themes and colors chosen by the user in variables with
+    # shorter names.
+    selected.themes = input$ecologySetThemePicker
+    selected.colors = input$ecologySetColorPicker
+    # Get the dataset to display.  Filter if necessary.
+    temp.species.df = ecology.df %>%
+      dplyr::select(theme.name, set.name, part.name, color.name, color.hex,
+                    text.color.hex, total.parts) %>%
+      distinct()
+    if(length(selected.themes) > 0) {
+      temp.species.df = temp.species.df %>%
+        filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes))
+    }
+    if(length(selected.colors) > 0) {
+      temp.species.df = temp.species.df %>%
+        filter(color.name %in% selected.colors)
+    }
+    # Display the dataset.
+    part.table(temp.species.df,
+               columns.to.hide = c(4, 5),
+               column.names = c("Theme", "Set", "Part", "Color", "Color hex",
+                                "Text color hex", "Number of pieces"))
+  })
+  
 })
