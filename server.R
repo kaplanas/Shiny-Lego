@@ -576,6 +576,8 @@ shinyServer(function(input, output) {
   # Plants                                                                    #
   #############################################################################
   
+  # Get the dimensions of the facets needed for the plant dendrograms, and
+  # create the facets.
   plant.facet.info = reactive({
     dendrogram.facet.dims(max(length(input$plantsDendrogramThemePicker), 1))
   })
@@ -583,6 +585,8 @@ shinyServer(function(input, output) {
     dendrogram.facet.uis(plant.facet.info(),
                          "plant")
   })
+  
+  # Plot the actual dendrograms.
   observe({
     plant.facets = dendrogram.facets(ecology.vertices.vis.df %>%
                                        filter(type == "plant"),
@@ -603,6 +607,8 @@ shinyServer(function(input, output) {
   # Animals                                                                   #
   #############################################################################
   
+  # Get the dimensions of the facets needed for the animal dendrograms, and
+  # create the facets.
   animal.facet.info = reactive({
     dendrogram.facet.dims(max(length(input$animalsDendrogramThemePicker), 1))
   })
@@ -610,6 +616,8 @@ shinyServer(function(input, output) {
     dendrogram.facet.uis(animal.facet.info(),
                          "animal")
   })
+  
+  # Plot the actual dendrograms.
   observe({
     animal.facets = dendrogram.facets(ecology.vertices.vis.df %>%
                                         filter(type == "animal"),

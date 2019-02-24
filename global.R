@@ -50,6 +50,7 @@ colors.df = colors.df %>%
                                  "#FFFFFF"))
 
 # Create a table of themes that flattens out the theme tree structure.
+# Sub-theme nesting only goes two deep (I checked).
 theme.tree.df = themes.df %>%
   mutate(theme.id = id,
          theme.name = name,
@@ -106,13 +107,15 @@ lego.df = sets.df %>%
          color.is.trans, text.color.hex)
 
 # Create a data frame with distinct top-level themes and various counts
-# associated with each (for displaying in input widgets).
+# associated with each (for displaying in input widgets).  We'll add the counts
+# after creating the tables for each part type.
 theme.counts.df = lego.df %>%
   group_by(theme.name) %>%
   summarize(total.parts = sum(total.parts, na.rm = T)) %>%
   ungroup()
 
-# Create a table of minifigure heads (for demographics).
+# Create a table of minifigure heads (for demographics).  Infer gender from
+# keywords in the part name, and the presence of facial hair.
 heads.df = lego.df %>%
   filter(grepl("Mini(fig|doll) Heads", part.category.name)) %>%
   mutate(gender = case_when(grepl("\\b[Mm]ale\\b", part.name) ~ "Male",
@@ -127,6 +130,9 @@ heads.df = lego.df %>%
          theme.pct.female = (sum(ifelse(gender == "Female", 1, 0)) /
            sum(ifelse(gender == "Male" | gender == "Female", 1, 0))) * 100) %>%
   ungroup()
+
+# Compute ethnic diversity for each theme, and add ethnic diversity to each
+# part in that theme.
 heads.df = heads.df %>%
   left_join(heads.df %>%
               group_by(theme.name, color.hex) %>%
@@ -159,9 +165,8 @@ hair.df = lego.df %>%
          text.color.hex, set.name, theme.name, sub.theme.name,
          sub.sub.theme.name, num.parts, theme.num.parts)
 
-# Create another table with style keywords; a piece gets multiple rows if it's
-# associated with multiple styles.  Add a row with the style "Other" for pieces
-# that don't have any other style keywords.
+# Create another table with hair styles and regular expressions for finding the
+# keywords associated with each one.
 hair.style.words.df = data.frame(
   word = c("Long", "Bangs", "Ponytail", "Short", "Wavy", "Mid-length", "Bun",
            "Tousled", "Braid", "Straight", "Spiked", "Bushy",
@@ -174,6 +179,9 @@ hair.style.words.df = data.frame(
             "bald", "coil", "dreadlocks", "bowl", "mohawk", "afro", "combover",
             "mullet")
 )
+
+# Associate each piece with its style(s); a piece gets multiple rows if it's
+# associated with multiple styles.
 hair.style.df = do.call(
   "bind_rows",
   apply(
@@ -185,6 +193,9 @@ hair.style.df = do.call(
     }
   )
 )
+
+# Add a row with the style "Other" for pieces that don't have any other style
+# keywords.
 hair.style.df = bind_rows(
   hair.style.df,
   hair.df %>%
@@ -192,12 +203,8 @@ hair.style.df = bind_rows(
     mutate(style = "Other")
 )
 
-# Create another table with (garment) type keywords; a piece gets multiple rows
-# if it's associated with multiple types.  Add a row with the type "Other" for
-# pieces that don't have any other type keywords.  If the keyword is
-# immediately preceded by color, replace the color of the piece with the color
-# word.  (If multiple color names match the string before the keyword, use the
-# longest one; this is likely to be the correct, and most specific, choice.)
+# Create another table with garment types and regular expressions for finding
+# the keywords associated with each one.
 clothes.type.words.df = data.frame(
   word = c("Shirt", "Jacket", "Armor", "Vest", "Suit", "Robe", "Skirt",
            "Overalls", "Sweater", "Uniform", "Trousers", "Coat", "Loincloth",
@@ -212,6 +219,12 @@ clothes.type.words.df = data.frame(
             "spacesuit", "wetsuit", "leotard", "swimsuit", "blazer",
             "waistcoat", "tuxedo", "jeans", "kimono", "nightgown", "pajama")
 )
+
+# Associate each piece with its type(s); a piece gets multiple rows if it's
+# associated with multiple types.  If the keyword is immediately preceded by a
+# color word, replace the color of the piece with the color word.  (If multiple
+# color names match the string before the keyword, use the longest one; this is
+# likely to be the most specific, and therefore correct, choice.)
 clothes.type.df = do.call(
   "bind_rows",
   apply(
@@ -254,6 +267,9 @@ clothes.type.df = do.call(
     }
   )
 )
+
+# Add a row with the type "Other" for pieces that don't have any other type
+# keywords.
 clothes.type.df = bind_rows(
   clothes.type.df,
   clothes.df %>%
@@ -275,8 +291,8 @@ accessories.df = lego.df %>%
          text.color.hex, set.name, theme.name, sub.theme.name,
          sub.sub.theme.name, num.parts, theme.num.parts)
 
-# Create another table with accessory keywords; a piece gets multiple rows if
-# it's associated with multiple accessories.
+# Create another table with accessories and regular expressions for finding the
+# keywords associated with each one.
 accessory.words.df = data.frame(
   word = c("Glasses", "Mask", "Headset", "Goggles", "Balaclava", "Headband",
            "Visor", "Tattoo", "Helmet", "Hood", "Crown", "Belt", "Cloak",
@@ -303,6 +319,10 @@ accessory.words.df = data.frame(
             "skate", "preserver", "poncho", "breathing apparatus",
             "scuba tank")
 )
+
+
+# Associate each piece with its accessory(ies); a piece gets multiple rows if
+# it's associated with multiple accessories.
 accessory.parts.df = do.call(
   "bind_rows",
   apply(
@@ -326,7 +346,7 @@ accessory.parts.df = do.call(
   )
 )
 
-# Create a table with all fashion items.
+# Create a table with all fashion items (hair, clothes, and accessories).
 fashion.items.df = lego.df %>%
   left_join(hair.style.df %>%
               select(part.id, style) %>%
@@ -350,7 +370,27 @@ fashion.items.df = lego.df %>%
            !is.na(clothing.types) |
            !is.na(accessories))
 
-# Get a quick mapping from wordforms to lemmas.
+# Read in a dump of WordNet hypernyms.  We could get hypernyms using the
+# "wordnet" package, but we would have to look for hypernys one word at a time;
+# this is faster, because we want to get the whole graph and then find paths
+# from specific words to "plant" or "animal" (both to determine which words
+# actually refer to plants/animals, and to find their place in the tree of
+# life).
+hypernyms.df = bind_rows(
+  read.csv("data_files/direct_hypernyms.csv", header = T,
+           stringsAsFactors = F),
+  setNames(read.csv("data_files/direct_hypernyms_2.csv", header = F,
+                    stringsAsFactors = F),
+           names(read.csv("data_files/direct_hypernyms.csv", header = T,
+                          nrows = 3))),
+  setNames(read.csv("data_files/direct_hypernyms_3.csv", header = F,
+                    stringsAsFactors = F),
+           names(read.csv("data_files/direct_hypernyms.csv", header = T,
+                          nrows = 3)))
+)
+
+# Get a quick mapping from wordforms to lemmas, used for mapping plant/animal
+# keywords to lemmas in WordNet.
 data(hash_lemmas)
 
 # Get plant and animal pieces.
@@ -367,8 +407,7 @@ ecology.words.df = data.frame(word = gsub("[^A-Za-z ]", "",
   ungroup()
 
 # Create a directed graph whose edges go from words to their hyponyms.  Plants
-# and animals only.  Remove certain subtypes of animals (e.g., "predatory
-# animal") to reduce the number of distinct ways a piece may be classified.
+# and animals only.
 ecology.edges = hypernyms.df %>%
   filter(is.element(A_LEXDOMAINNAME, c("noun.animal", "noun.plant"))) %>%
   mutate(to = A_LEMMA,
@@ -380,12 +419,19 @@ ecology.edges = hypernyms.df %>%
   mutate(from = A_LEMMA) %>%
   select(from, to, type) %>%
   distinct()
+
+# Remove certain subtypes of animals (e.g., "predatory animal") to reduce the
+# number of distinct ways a piece may be classified.  We want all the words to
+# be classified according to the same system.
 ecology.edges = ecology.edges %>%
   filter(!is.element(to, c("predatory animal", "domesticated animal",
                            "predator", "young", "male", "female",
                            "offspring", "domestic animal", "insectivore",
                            "herb"))) %>%
   filter(to != "chestnut" | !grepl("equus|callus|horse", from))
+
+# Add edges for a few words that don't follow the desired classification system
+# (i.e., words that are classified only as something like "young mammal").
 ecology.edges = bind_rows(
   ecology.edges,
   data.frame(
@@ -395,11 +441,14 @@ ecology.edges = bind_rows(
     stringsAsFactors = F
   )
 )
+
+# Make the igraph.
 ecology.igraph = graph_from_data_frame(ecology.edges)
 
 # For each word in the plant/animal pieces, if that word is a plant/animal
 # word, get the shortest path from that word to "plant"/"animal" and add that
-# path to the filtered graph of edges.
+# path to the filtered graph of edges.  Skip words that usually do not refer to
+# a plant or animal when they appear in a part name.
 ecology.edges.filtered = data.frame()
 for(i in 1:nrow(ecology.words.df)) {
   current.word = as.character(ecology.words.df$word[i])
@@ -436,9 +485,13 @@ rm(i, current.word, current.lemma, current.types, type, path, j)
 ecology.edges.filtered = ecology.edges.filtered %>%
   distinct()
 
-# Create data frames of edges and nodes.
+# Create a data frame of edges.
 ecology.edges.vis.df = ecology.edges.filtered %>%
   mutate(color = "black")
+
+# Create a data frame of nodes.  Add a regular expression to each node that
+# matches the name of the node and related wordforms, so that we can later
+# match nodes to part names that contain the relevant keywords.
 ecology.vertices.vis.df = ecology.vertices.filtered %>%
   left_join(ecology.edges.filtered, by = c("name" = "to", "type")) %>%
   mutate(depth = ifelse(is.na(depth), 0, depth)) %>%
@@ -474,7 +527,8 @@ ecology.parts.nodes.df = ecology.df %>%
          total.parts, theme.name, type)
 
 # Add the parts to each node.  Don't group here; that happens just before
-# plotting, because we might or might not need to facet by theme.
+# plotting, because we might or might not need to facet by theme, and that
+# affects the size of each node.
 ecology.vertices.vis.df = ecology.vertices.vis.df %>%
   left_join(ecology.parts.nodes.df, by = c("id" = "node.name", "type"))
 
@@ -567,9 +621,7 @@ color.picker.input = function(input.id, data.df, label.text) {
 circle.plot.dims = list(height = 700, width = 700)
 circle.plot.facet.dims = list(height = 300, width = 300)
 
-# Function to create a (possibly faceted) circle graph.  Assumes that the first
-# input is a dataframe with columns "facet.name", "facet.theme", "facet.other",
-# "color.hex", "part.id", "part.name", "num.parts".  General strategy: use
+# Function to create a (possibly faceted) circle graph.  General strategy: use
 # ggraph to pack the circles and determine their position/size, and then feed
 # the coordinates and size of each circle into Highcharts to display the graph.
 circle.graph = function(data.df, facet.by.theme, facet.by.other) {
@@ -787,7 +839,8 @@ circle.plot.height = function(num.themes, num.other) {
 
 # Function to create a treemap.
 treemap.graph = function(data.df, level.settings) {
-  # Determine the number of levels in the data.
+  # Determine the number of levels in the data.  Use column names to infer the
+  # number of levels and their order.
   level.ids = colnames(data.df)[grepl("^id\\.level", colnames(data.df))]
   level.nums = gsub("id\\.level\\.", "", level.ids)
   # Create a dataframe that encodes the tree structure for Highcharts.
@@ -878,9 +931,8 @@ part.table = function(data.df, column.names, columns.to.hide) {
 }
 
 # Function to determine the dimensions we need for faceting a dendrogram.
+# We're using bootstrap, so the number of columns has to be a divisor of 12.
 dendrogram.facet.dims = function(num.themes) {
-  # Get the coordinates of the facets.  We're using bootstrap, so the number of
-  # columns has to be a divisor of 12.
   num.cols = wrap_dims(num.themes)[2]
   while(!is.element(num.cols, c(1, 2, 3, 4, 6, 12))) {
     num.cols = num.cols - 1
@@ -917,12 +969,13 @@ dendrogram.facet.uis = function(facet.info, output.string) {
 
 # Function to create a list with one element for each facet of a dendrogram we
 # want to plot.  Each element of the list contains the dendrogram itself, plus
-# various pieces of info about how to plot the facet.
+# the ID of the widget that holds the facet.
 dendrogram.facets = function(vertices.df,
                              edges.df,
                              themes.for.faceting,
                              facet.info,
                              output.string) {
+  # Get the theme associated with each facet.
   if(length(themes.for.faceting) == 0) {
     vertices.df = vertices.df %>%
       mutate(theme.name = "")
@@ -930,20 +983,28 @@ dendrogram.facets = function(vertices.df,
   } else {
     themes.to.facet = sort(gsub(" \\([0-9]+\\)$", "", themes.for.faceting))
   }
+  # Create the facet for each theme.
   current.theme.index = 1
   facets = list()
   for(i in 1:facet.info[["num.rows"]]) {
     for(j in 1:facet.info[["num.cols"]]) {
       if(current.theme.index <= length(themes.to.facet)) {
+        # Note the row and column index of the current facet, and the name of
+        # its widget.
         current.facet = list(row.index = i,
                              col.index = j,
                              id = paste(output.string, "dendrogram", i, j,
                                         sep = ""))
+        # Start with all and only the vertices associated with this theme, and
+        # the edges that lead to them.
         temp.vertices.df = vertices.df %>%
           filter(is.na(theme.name) |
                    theme.name == themes.to.facet[current.theme.index])
         temp.edges.df = edges.df %>%
           semi_join(temp.vertices.df, by = c("to" = "id"))
+        # For all the edges in the facet, add any nodes that those edges lead
+        # from, and any edges that lead to those nodes in turn, until we've
+        # found all the connected nodes/edges.
         found.all.vertices = F
         while(!found.all.vertices) {
           edges.to.add = edges.df %>%
@@ -965,6 +1026,10 @@ dendrogram.facets = function(vertices.df,
             found.all.vertices = T
           }
         }
+        # Group by node so we can get the number of parts associated with each
+        # node (= the size of the node).  Add a tooltip with a list of all the
+        # part names associated with the node, where the background color of
+        # each row is the color of the part.
         temp.vertices.df = temp.vertices.df %>%
           arrange(id, desc(total.parts)) %>%
           group_by(id, label, type, node.regex) %>%
@@ -988,6 +1053,7 @@ dendrogram.facets = function(vertices.df,
           mutate(title = ifelse(any.pieces, title, NA),
                  color.background = ifelse(any.pieces, "white", "black"),
                  color.border = "black")
+        # Make the dendrogram and add it to the current facet.
         current.facet[["dendrogram"]] = visNetwork(temp.vertices.df,
                                                    temp.edges.df,
                                                    main = themes.to.facet[current.theme.index]) %>%
