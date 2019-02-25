@@ -60,18 +60,17 @@ shinyServer(function(input, output) {
   
   output$demographicsDiversity = renderHighchart({
     # Get one row per theme, with the relevant columns.
-    temp.heads.df = heads.df %>%
-      dplyr::select(theme.name, theme.num.parts, theme.ethnic.diversity,
-                    theme.pct.female) %>%
-      filter(theme.num.parts > 1) %>%
+    temp.heads.df = theme.counts.df %>%
+      dplyr::select(theme.name, total.heads, ethnic.diversity, pct.female) %>%
+      filter(total.heads > 1) %>%
       distinct()
     # Add a "measure" column with the measure specified by the user.
     if(input$demographicsMeasurePicker == "Ethnic diversity") {
       temp.heads.df = temp.heads.df %>%
-        mutate(measure = theme.ethnic.diversity)
+        mutate(measure = ethnic.diversity)
     } else if(input$demographicsMeasurePicker == "Percent female") {
       temp.heads.df = temp.heads.df %>%
-        mutate(measure = theme.pct.female)
+        mutate(measure = pct.female)
     }
     temp.heads.df = temp.heads.df %>%
       filter(!is.na(measure))
@@ -81,7 +80,7 @@ shinyServer(function(input, output) {
         arrange(desc(measure), theme.name)
     } else if(input$demographicsOrderPicker == "Number of pieces") {
       temp.heads.df  = temp.heads.df %>%
-        arrange(desc(theme.num.parts), theme.name)
+        arrange(desc(total.heads), theme.name)
     } else if(input$demographicsOrderPicker == "Theme name") {
       temp.heads.df = temp.heads.df %>%
         arrange(theme.name)
@@ -90,7 +89,7 @@ shinyServer(function(input, output) {
                                       levels = temp.heads.df$theme.name)
     # Get log num parts, and the maximum over the dataset.
     temp.heads.df = temp.heads.df %>%
-      mutate(theme.num.parts.col = log(theme.num.parts) / max(log(theme.num.parts)))
+      mutate(num.parts.col = log(total.heads) / max(log(total.heads)))
     # Set the format for the tooltip.
     point.format = paste(
       " ({point.num_pieces} pieces)</span><br/><span>",
@@ -105,9 +104,9 @@ shinyServer(function(input, output) {
       hc_add_series(pointPadding = 0,
                     data = temp.heads.df %>%
                       mutate(y = measure,
-                             num_pieces = theme.num.parts),
+                             num_pieces = total.heads),
                     colorByPoint = T,
-                    colors = rgb(colorRamp(c("white", "black"))(temp.heads.df$theme.num.parts.col),
+                    colors = rgb(colorRamp(c("white", "black"))(temp.heads.df$num.parts.col),
                                  maxColorValue = 255),
                     borderColor = "#000000") %>%
       hc_tooltip(headerFormat = "<span><b>{point.key}</b>",
@@ -509,7 +508,7 @@ shinyServer(function(input, output) {
     point.format = paste(
       " ({point.num_pieces} pieces)</span><br/><span>",
       input$moodsMoodPicker,
-      ":\u00A0{point.y}</span>",
+      ":\u00A0{point.y}%</span>",
       sep = ""
     )
     # Make the plot.

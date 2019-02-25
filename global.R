@@ -124,46 +124,14 @@ heads.df = lego.df %>%
                             grepl("[Gg]irl|[Ww]oman", part.name) ~ "Female",
                             T ~ "Unknown"),
          num.parts = ifelse(is.na(inv.num.sets), 1, inv.num.sets) *
-           ifelse(is.na(inv.num.parts), 1, inv.num.parts)) %>%
-  group_by(theme.name) %>%
-  mutate(theme.num.parts = sum(num.parts),
-         theme.pct.female = (sum(ifelse(gender == "Female", 1, 0)) /
-           sum(ifelse(gender == "Male" | gender == "Female", 1, 0))) * 100) %>%
-  ungroup()
-
-# Compute ethnic diversity for each theme, and add ethnic diversity to each
-# part in that theme.
-heads.df = heads.df %>%
-  left_join(heads.df %>%
-              group_by(theme.name, color.hex) %>%
-              summarize(theme.color.num.parts = sum(num.parts)) %>%
-              ungroup() %>%
-              group_by(theme.name) %>%
-              summarize(theme.ethnic.diversity = -1 *
-                          sum((theme.color.num.parts /
-                                 sum(theme.color.num.parts)) *
-                                log(theme.color.num.parts /
-                                      sum(theme.color.num.parts),
-                                    2))) %>%
-              dplyr::select(theme.name, theme.ethnic.diversity),
-            by = c("theme.name")) %>%
-  select(part.id, part.name, color.name, color.hex, color.is.trans,
-         text.color.hex, gender, set.name, theme.name, sub.theme.name,
-         sub.sub.theme.name, num.parts, theme.num.parts, theme.pct.female,
-         theme.ethnic.diversity)
+           ifelse(is.na(inv.num.parts), 1, inv.num.parts))
 
 # Create a table of minifigure hair (for fashion).
 hair.df = lego.df %>%
   filter(grepl("Headwear", part.category.name) &
            grepl("Hair", part.name)) %>%
   mutate(num.parts = ifelse(is.na(inv.num.sets), 1, inv.num.sets) *
-           ifelse(is.na(inv.num.parts), 1, inv.num.parts)) %>%
-  group_by(theme.name) %>%
-  mutate(theme.num.parts = sum(num.parts)) %>%
-  ungroup() %>%
-  select(part.id, part.name, color.name, color.hex, color.is.trans,
-         text.color.hex, set.name, theme.name, sub.theme.name,
-         sub.sub.theme.name, num.parts, theme.num.parts)
+           ifelse(is.na(inv.num.parts), 1, inv.num.parts))
 
 # Create another table with hair styles and regular expressions for finding the
 # keywords associated with each one.
@@ -202,6 +170,14 @@ hair.style.df = bind_rows(
     anti_join(hair.style.df, by = c("part.id")) %>%
     mutate(style = "Other")
 )
+
+# Create a table of minifigure clothes.
+clothes.df = lego.df %>%
+  filter(grepl("^Mini(fig|doll).*Body$", part.category.name)) %>%
+  mutate(num.parts = ifelse(is.na(inv.num.sets), 1, inv.num.sets) *
+           ifelse(is.na(inv.num.parts), 1, inv.num.parts),
+         upper.lower = case_when(grepl("Upper", part.category.name) ~ "upper",
+                                 grepl("Lower", part.category.name) ~ "lower"))
 
 # Create another table with garment types and regular expressions for finding
 # the keywords associated with each one.
@@ -261,8 +237,7 @@ clothes.type.df = do.call(
                                        text.color.hex.y)) %>%
         select(part.id, part.name, upper.lower, color.name, color.hex,
                color.is.trans, text.color.hex, set.name, theme.name,
-               sub.theme.name, sub.sub.theme.name, num.parts, theme.num.parts,
-               type)
+               sub.theme.name, sub.sub.theme.name, num.parts, type)
       temp.df
     }
   )
@@ -283,13 +258,7 @@ clothes.type.df = bind_rows(
 accessories.df = lego.df %>%
   filter(part.category.name == "Minifig Accessories") %>%
   mutate(num.parts = ifelse(is.na(inv.num.sets), 1, inv.num.sets) *
-           ifelse(is.na(inv.num.parts), 1, inv.num.parts)) %>%
-  group_by(theme.name) %>%
-  mutate(theme.num.parts = sum(num.parts)) %>%
-  ungroup() %>%
-  select(part.id, part.name, color.name, color.hex, color.is.trans,
-         text.color.hex, set.name, theme.name, sub.theme.name,
-         sub.sub.theme.name, num.parts, theme.num.parts)
+           ifelse(is.na(inv.num.parts), 1, inv.num.parts))
 
 # Create another table with accessories and regular expressions for finding the
 # keywords associated with each one.
@@ -319,7 +288,6 @@ accessory.words.df = data.frame(
             "skate", "preserver", "poncho", "breathing apparatus",
             "scuba tank")
 )
-
 
 # Associate each piece with its accessory(ies); a piece gets multiple rows if
 # it's associated with multiple accessories.
@@ -369,6 +337,54 @@ fashion.items.df = lego.df %>%
   filter(!is.na(hair.styles) |
            !is.na(clothing.types) |
            !is.na(accessories))
+
+# Create another table with moods and regular expressions for finding the
+# keywords associated with each one.
+mood.words.df = data.frame(
+  word = c("Happy", "Angry", "Afraid", "Sad"),
+  regex = c("smil(e|ing)|grin|smirk|happy|laugh",
+            "angry|stern|scowl|gritt(ed|ing)|grim\\b|rag(e|ing)|sneer|annoy|fierce|frustrated",
+            "scared|worried|sur?prised|concern|alarm|anxious|shock|tense|troubled|upset",
+            "sad|tear|crying|emb(a|e)rrassed|pout")
+)
+
+# Associate each piece with its mood(s); a piece gets multiple rows if it's
+# associated with multiple moods.
+moods.df = do.call(
+  "bind_rows",
+  apply(
+    mood.words.df, 1,
+    function(x) {
+      temp.df = heads.df %>%
+        filter(grepl(x[2], tolower(part.name))) %>%
+        mutate(mood = x[1])
+      temp.df
+    }
+  )
+)
+
+# If a piece has no other mood keywords, "frown" -> "sad".  (Otherwise, "frown"
+# is ambiguous; it could be "sad" or "angry".)
+moods.df = bind_rows(
+  moods.df,
+  heads.df %>%
+    filter(grepl("frown", tolower(part.name)) &
+             !grepl(mood.words.df$regex[mood.words.df$word == "Angry"],
+                    tolower(part.name))) %>%
+    mutate(mood = "Sad")
+)
+
+# Associate a color with each mood.
+moods.df = moods.df %>%
+  mutate(mood.color = case_when(mood == "Happy" ~ "#F2CD37",
+                                mood == "Sad" ~ "#5A93DB",
+                                mood == "Angry" ~ "#C91A09",
+                                mood == "Afraid" ~ "#AC78BA"))
+
+# Make mood an ordered factor so the graphs display in the correct, consistent
+# order.
+moods.df$mood = factor(moods.df$mood,
+                       levels = c("Happy", "Sad", "Afraid", "Angry"))
 
 # Read in a dump of WordNet hypernyms.  We could get hypernyms using the
 # "wordnet" package, but we would have to look for hypernys one word at a time;
@@ -535,17 +551,35 @@ ecology.vertices.vis.df = ecology.vertices.vis.df %>%
 # Update theme count table.
 theme.counts.df = theme.counts.df %>%
   left_join(heads.df %>%
-              mutate(total.heads = theme.num.parts) %>%
-              select(theme.name, total.heads) %>%
-              distinct(),
+              group_by(theme.name, color.hex) %>%
+              summarize(color.num.parts = sum(num.parts)) %>%
+              ungroup() %>%
+              group_by(theme.name) %>%
+              summarize(ethnic.diversity = -1 *
+                          sum((color.num.parts /
+                                 sum(color.num.parts)) *
+                                log(color.num.parts /
+                                      sum(color.num.parts),
+                                    2)),
+                        total.heads = sum(color.num.parts)) %>%
+              ungroup() %>%
+              dplyr::select(theme.name, total.heads, ethnic.diversity),
+            by = c("theme.name")) %>%
+  left_join(heads.df %>%
+              group_by(theme.name) %>%
+              summarize(pct.female = (sum(ifelse(gender == "Female", 1, 0)) /
+                                        sum(ifelse(gender == "Male" | gender == "Female", 1, 0))) * 100) %>%
+              select(theme.name, pct.female),
             by = c("theme.name")) %>%
   left_join(hair.df %>%
-              mutate(total.hair = theme.num.parts) %>%
+              group_by(theme.name) %>%
+              summarize(total.hair = sum(num.parts)) %>%
               select(theme.name, total.hair) %>%
               distinct(),
             by = c("theme.name")) %>%
   left_join(clothes.df %>%
-              mutate(total.clothes = theme.num.parts) %>%
+              group_by(theme.name) %>%
+              summarize(total.clothes = sum(num.parts)) %>%
               select(theme.name, total.clothes) %>%
               distinct(),
             by = c("theme.name")) %>%
@@ -563,13 +597,35 @@ theme.counts.df = theme.counts.df %>%
             by = c("theme.name")) %>%
   left_join(ecology.parts.nodes.df %>%
               filter(type == "plant") %>%
+              group_by(theme.name, color.hex) %>%
+              summarize(color.num.parts = sum(total.parts)) %>%
+              ungroup() %>%
               group_by(theme.name) %>%
-              summarize(total.plants = sum(total.parts)),
+              summarize(plant.species.diversity = -1 *
+                          sum((color.num.parts /
+                                 sum(color.num.parts)) *
+                                log(color.num.parts /
+                                      sum(color.num.parts),
+                                    2)),
+                        total.plants = sum(color.num.parts)) %>%
+              ungroup() %>%
+              dplyr::select(theme.name, total.plants, plant.species.diversity),
             by = c("theme.name")) %>%
   left_join(ecology.parts.nodes.df %>%
               filter(type == "animal") %>%
+              group_by(theme.name, color.hex) %>%
+              summarize(color.num.parts = sum(total.parts)) %>%
+              ungroup() %>%
               group_by(theme.name) %>%
-              summarize(total.animals = sum(total.parts)),
+              summarize(animal.species.diversity = -1 *
+                          sum((color.num.parts /
+                                 sum(color.num.parts)) *
+                                log(color.num.parts /
+                                      sum(color.num.parts),
+                                    2)),
+                        total.animals = sum(color.num.parts)) %>%
+              ungroup() %>%
+              dplyr::select(theme.name, total.animals, animal.species.diversity),
             by = c("theme.name")) %>%
   left_join(ecology.parts.nodes.df %>%
               group_by(theme.name) %>%
