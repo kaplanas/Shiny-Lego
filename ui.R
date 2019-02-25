@@ -385,6 +385,36 @@ shinyUI(navbarPage(
         
       ),
       
+      # Bar plot of species diversity.
+      tabPanel(
+        
+        "Species diversity by theme",
+        
+        # Sidebar panel for controls.
+        sidebarPanel(
+          pickerInput(
+            "ecologyMeasurePicker", "Choose measure to plot:",
+            choices = c("Species diversity of plants", "Species diversity of animals"),
+            selected = "Species diversity of plants",
+            multiple = F
+          ),
+          pickerInput(
+            "ecologyOrderPicker", "Order by:",
+            choices = c("Measure", "Number of pieces", "Theme name"),
+            selected = "Measure",
+            multiple = F
+          ),
+          tags$p(HTML("<b>Species diversity</b> is the Shannon entropy (base 2) of \"species\" (deduced from keywords in the part name) over all pieces."))
+        ),
+        
+        # Main panel with plot.
+        mainPanel(
+          highchartOutput("ecologyDiversity",
+                          width = "700px", height = "2000px")
+        )
+        
+      ),
+      
       # Table for finding sets with pieces for a particular plant/animal.
       tabPanel(
         

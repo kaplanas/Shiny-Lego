@@ -634,6 +634,75 @@ shinyServer(function(input, output) {
   })
   
   #############################################################################
+  # Species diversity                                                         #
+  #############################################################################
+  
+  output$ecologyDiversity = renderHighchart({
+    # Get one row per theme, with the relevant columns.
+    temp.ecology.df = theme.counts.df %>%
+      dplyr::select(theme.name, total.plants, plant.species.diversity,
+                    total.animals, animal.species.diversity) %>%
+      filter(total.plants > 1 | total.animals > 1) %>%
+      distinct()
+    # Add "measure" and "total" columns with the measure specified by the user
+    # and the corresponding total.
+    if(input$ecologyMeasurePicker == "Species diversity of plants") {
+      temp.ecology.df = temp.ecology.df %>%
+        mutate(measure = plant.species.diversity,
+               total = total.plants)
+    } else if(input$ecologyMeasurePicker == "Species diversity of animals") {
+      temp.ecology.df = temp.ecology.df %>%
+        mutate(measure = animal.species.diversity,
+               total = total.animals)
+    }
+    temp.ecology.df = temp.ecology.df %>%
+      filter(!is.na(measure))
+    # Sort by the column specified by the user.
+    if(input$ecologyOrderPicker == "Measure") {
+      temp.ecology.df = temp.ecology.df %>%
+        arrange(desc(measure), theme.name)
+    } else if(input$ecologyOrderPicker == "Number of pieces") {
+      temp.ecology.df  = temp.ecology.df %>%
+        arrange(desc(total), theme.name)
+    } else if(input$ecologyOrderPicker == "Theme name") {
+      temp.ecology.df = temp.ecology.df %>%
+        arrange(theme.name)
+    }
+    temp.ecology.df$theme.name = factor(temp.ecology.df$theme.name,
+                                        levels = temp.ecology.df$theme.name)
+    # Get log num parts, and the maximum over the dataset.
+    temp.ecology.df = temp.ecology.df %>%
+      mutate(num.parts.col = log(total) / max(log(total)))
+    # Set the format for the tooltip.
+    point.format = paste(
+      " ({point.num_pieces} ",
+      ifelse(input$ecologyMeasurePicker == "Species diversity of plants",
+             "plant", "animal"),
+      " pieces)</span><br/><span>",
+      input$ecologyMeasurePicker,
+      ":\u00A0{point.y}</span>",
+      sep = ""
+    )
+    # Make the plot.
+    hc = highchart() %>%
+      hc_chart(type = "bar") %>%
+      hc_xAxis(categories = temp.ecology.df$theme.name) %>%
+      hc_add_series(pointPadding = 0,
+                    data = temp.ecology.df %>%
+                      mutate(y = measure,
+                             num_pieces = total),
+                    colorByPoint = T,
+                    colors = rgb(colorRamp(c("white", "black"))(temp.ecology.df$num.parts.col),
+                                 maxColorValue = 255),
+                    borderColor = "#000000") %>%
+      hc_tooltip(headerFormat = "<span><b>{point.key}</b>",
+                 pointFormat = point.format,
+                 valueDecimals = 2) %>%
+      hc_legend(enabled = F)
+    hc
+  })
+  
+  #############################################################################
   # Find sets with a specific plant or animal                                 #
   #############################################################################
   
