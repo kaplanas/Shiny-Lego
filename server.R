@@ -560,22 +560,27 @@ shinyServer(function(input, output) {
   #############################################################################
   
   output$moodsSets = renderDataTable({
-    # Store the themes and moods chosen by the user in variables with shorter
-    # names.
+    # Store the themes, genders, and moods chosen by the user in variables with
+    # shorter names.
     selected.themes = input$moodsSetThemePicker
+    selected.genders = input$moodsSetGenderPicker
     selected.moods = input$moodsSetMoodPicker
     # Get the dataset to display.  Filter if necessary.
     temp.moods.df = moods.df %>%
-      dplyr::select(theme.name, set.name, part.name, color.name, color.hex,
-                    text.color.hex, num.parts, mood) %>%
+      dplyr::select(theme.name, set.name, part.name, gender, color.name,
+                    color.hex, text.color.hex, num.parts, mood) %>%
       distinct() %>%
-      group_by(theme.name, set.name, part.name, color.name, color.hex,
+      group_by(theme.name, set.name, part.name, gender, color.name, color.hex,
                text.color.hex, num.parts) %>%
       summarize(moods = paste0(mood, collapse = ", ")) %>%
       ungroup()
     if(length(selected.themes) > 0) {
       temp.moods.df = temp.moods.df %>%
         filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes))
+    }
+    if(length(selected.genders) > 0) {
+      temp.moods.df = temp.moods.df %>%
+        filter(gender %in% selected.genders)
     }
     if(length(selected.moods) > 0) {
       temp.moods.df = temp.moods.df %>%
@@ -584,10 +589,12 @@ shinyServer(function(input, output) {
                      moods))
     }
     # Display the dataset.
-    part.table(temp.moods.df,
-               columns.to.hide = c(4, 5),
-               column.names = c("Theme", "Set", "Part", "Moods", "Color",
-                                "Color hex", "Text color hex",
+    part.table(temp.moods.df %>%
+                 select(theme.name, set.name, part.name, moods, gender,
+                        color.name, color.hex, text.color.hex, num.parts),
+               columns.to.hide = c(6, 7),
+               column.names = c("Theme", "Set", "Part", "Moods", "Gender",
+                                "Color", "Color hex", "Text color hex",
                                 "Number of pieces"))
   })
   

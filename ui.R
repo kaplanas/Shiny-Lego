@@ -320,6 +320,12 @@ shinyUI(navbarPage(
         sidebarPanel(
           theme.picker.input("moodsSetThemePicker", "total.heads"),
           pickerInput(
+            "moodsSetGenderPicker", "Filter to one or more genders:",
+            choices = sort(unique(moods.df$gender)),
+            options = list(`actions-box` = T),
+            multiple = T
+          ),
+          pickerInput(
             "moodsSetMoodPicker", "Filter to one or more moods:",
             choices = c("Happy", "Sad", "Angry", "Afraid"),
             options = list(`actions-box` = T),
