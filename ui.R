@@ -264,6 +264,12 @@ shinyUI(navbarPage(
         # Sidebar panel for controls.
         sidebarPanel(
           theme.picker.input("moodsPolarThemePicker", "total.moods"),
+          pickerInput(
+            "moodsPolarGenderPicker", "Filter to one or more genders:",
+            choices = sort(unique(moods.df$gender)),
+            options = list(`actions-box` = T),
+            multiple = T
+          ),
           tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
           tags$p(HTML("<b>Mood</b> is inferred from keywords in the part name."))
         ),

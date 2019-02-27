@@ -421,15 +421,36 @@ shinyServer(function(input, output) {
   
   output$moodsPolarPlotUI = renderUI({
     temp.moods.df = moods.df %>%
-      mutate(facet.name = "")
+      mutate(facet.name = "",
+             facet.theme = "",
+             facet.other = "")
     temp.moods.df$mood.and.color = factor(paste(temp.moods.df$mood, temp.moods.df$mood.color))
-    # Store the themes chosen by the user in a variable with a shorter name.
+    # Store the themes and genders chosen by the user in variables with
+    # shorter names.
     selected.themes = input$moodsPolarThemePicker
+    selected.genders = input$moodsPolarGenderPicker
+    # Determine what we're going to facet by: theme, gender, both, or neither.
     # Filter if necessary.
     if(length(selected.themes) > 0) {
       temp.moods.df = temp.moods.df %>%
         filter(theme.name %in% gsub(" \\([0-9]+\\)$", "", selected.themes)) %>%
-        mutate(facet.name = theme.name)
+        mutate(facet.name = theme.name,
+               facet.theme = theme.name)
+    }
+    if(length(selected.genders) > 0) {
+      temp.moods.df = temp.moods.df %>%
+        filter(gender %in% selected.genders) %>%
+        mutate(facet.name = paste(facet.name,
+                                  ifelse(length(selected.themes) > 0, ", ", ""),
+                                  gender,
+                                  sep = ""),
+               facet.other = gender)
+    }
+    # If we're faceting by both theme and gender, fix the number of columns at
+    # 3.
+    num.cols = NULL
+    if(length(selected.themes) > 0 & length(selected.genders) > 0) {
+      num.cols = 3
     }
     # Get the count for each mood.
     temp.moods.df = temp.moods.df %>%
@@ -460,7 +481,7 @@ shinyServer(function(input, output) {
         hc
       }
     ) %>%
-      hw_grid()
+      hw_grid(ncol = num.cols)
   })
   
   #############################################################################
