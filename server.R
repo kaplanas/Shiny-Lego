@@ -452,16 +452,20 @@ shinyServer(function(input, output) {
     if(length(selected.themes) > 0 & length(selected.genders) > 0) {
       num.cols = 3
     }
-    # Get the count for each mood.
+    # Get the count for each mood.  Also get the maximum count for each theme,
+    # so that we can scale all facets by gender within a theme appropriately.
     temp.moods.df = temp.moods.df %>%
-      group_by(mood.and.color, facet.name) %>%
+      group_by(mood.and.color, facet.name, facet.theme) %>%
       summarize(total.parts = sum(num.parts)) %>%
-      complete(facet.name, mood.and.color, fill = list(total.parts = 0)) %>%
+      complete(facet.name, facet.theme, mood.and.color,
+               fill = list(total.parts = 0)) %>%
       separate(mood.and.color, into = c("mood", "mood.color"), sep = " ")
     # Make the plot.
     lapply(
       sort(unique(as.character(temp.moods.df$facet.name))),
       function(x) {
+        current.theme = unique(temp.moods.df$facet.theme[as.character(temp.moods.df$facet.name) == x])
+        theme.max = max(temp.moods.df$total.parts[temp.moods.df$facet.theme == current.theme])
         hc = hchart(temp.moods.df %>%
                       filter(as.character(facet.name) == x),
                     "column",
@@ -473,6 +477,7 @@ shinyServer(function(input, output) {
                      pointFormat = "{point.y}") %>%
           hc_plotOptions(column = list(pointPadding = 0,
                                        groupPadding = 0)) %>%
+          hc_yAxis(max = theme.max) %>%
           hc_add_theme(hc_theme_null())
         if(x != "") {
           hc = hc %>%
