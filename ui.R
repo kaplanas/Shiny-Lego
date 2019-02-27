@@ -28,8 +28,8 @@ shinyUI(navbarPage(
             multiple = T
           ),
           tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
-          tags$p(HTML("Each circle represents a <b>unique minifigure or minidoll head</b>.")),
           tags$p(HTML("<b>Hover</b> to see the part name.")),
+          tags$p(HTML("Each circle represents a <b>unique minifigure or minidoll head</b>.")),
           tags$p(HTML("Area is proportional to the <b>number of pieces</b> across all sets.")),
           tags$p(HTML("<b>\"Ethnicity\"</b> is the color of the piece.")),
           tags$p(HTML("<b>Gender</b> is inferred from keywords in the part name (\"Male\", \"Female\", etc., plus references to facial hair).")),
@@ -62,8 +62,10 @@ shinyUI(navbarPage(
             selected = "Measure",
             multiple = F
           ),
+          tags$p(HTML("<b>Hover</b> to see the number of pieces and measure value.")),
           tags$p(HTML("<b>Ethnic diversity</b> is the Shannon entropy (base 2) of color over all pieces.")),
-          tags$p(HTML("<b>Percent female</b> is the percent of female pieces out of all pieces, excluding pieces of unknown gender."))
+          tags$p(HTML("<b>Percent female</b> is the percent of female pieces out of all pieces, excluding pieces of unknown gender.")),
+          tags$p(HTML("<b>Saturation</b> represents the number of pieces in the theme."))
         ),
         
         # Main panel with plot.
@@ -128,6 +130,7 @@ shinyUI(navbarPage(
                            "Style, then color" = "style.first")
           ),
           tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
+          tags$p(HTML("<b>Click</b> to drill down.  At the lowest level, <b>hover</b> to see the part name.")),
           tags$p(HTML("<b>Style</b> is inferred from keywords in the part name.")),
           tags$p(HTML("A part with no keywords is classified as <b>\"Other\"</b>.")),
           tags$p(HTML("A single part may have <b>multiple styles</b>; in that case, it's counted in <i>all</i> relevant styles."))
@@ -171,6 +174,7 @@ shinyUI(navbarPage(
             multiple = T
           ),
           tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
+          tags$p(HTML("<b>Click</b> to drill down.  At the lowest level, <b>hover</b> to see the part name.")),
           tags$p(HTML("Clothes for the <b>upper</b> and <b>lower</b> body are shown separately.")),
           tags$p(HTML("<b>Type</b> is inferred from keywords in the part name.")),
           tags$p(HTML("A part with no keywords is classified as <b>\"Other\"</b>.")),
@@ -195,6 +199,7 @@ shinyUI(navbarPage(
        sidebarPanel(
          theme.picker.input("accessoriesTreemapThemePicker", "total.accessories"),
          tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
+         tags$p(HTML("<b>Click</b> to drill down.  At the lowest level, <b>hover</b> to see the part name.")),
          tags$p(HTML("<b>Accessories</b> are inferred from keywords in the part name.")),
          tags$p(HTML("A single part may have <b>multiple accessories</b>; in that case, it's counted in <i>all</i> relevant accessories.")),
          tags$p(HTML("<b>Color</b> is not included because it can't consistently be inferred from the dataset.  The color of the accessory may be the color of the piece, a color noted in the name of the part, or not indicated at all."))
@@ -271,7 +276,9 @@ shinyUI(navbarPage(
             multiple = T
           ),
           tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
-          tags$p(HTML("<b>Mood</b> is inferred from keywords in the part name."))
+          tags$p(HTML("<b>Hover</b> to see the number of pieces.")),
+          tags$p(HTML("<b>Mood</b> is inferred from keywords in the part name (heads only).")),
+          tags$p(HTML("A single head may have <b>multiple moods</b>; in that case, it's counted in <i>all</i> relevant moods."))
         ),
         
         # Main panel with plot.
@@ -300,7 +307,9 @@ shinyUI(navbarPage(
             selected = "Percent of pieces with mood",
             multiple = F
           ),
-          tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red"))
+          tags$p(span("Large graphs (e.g., of the full dataset) may take a few seconds to render.", style = "color:red")),
+          tags$p(HTML("<b>Saturation</b> represents the number of pieces in the theme.")),
+          tags$p(HTML("<b>Hover</b> to see the number of pieces and percent with the chosen mood."))
         ),
         
         # Main panel with plot.
@@ -416,7 +425,9 @@ shinyUI(navbarPage(
             selected = "Measure",
             multiple = F
           ),
-          tags$p(HTML("<b>Species diversity</b> is the Shannon entropy (base 2) of \"species\" (deduced from keywords in the part name) over all pieces."))
+          tags$p(HTML("<b>Hover</b> to see the number of pieces and measure value.")),
+          tags$p(HTML("<b>Species diversity</b> is the Shannon entropy (base 2) of \"species\" (deduced from keywords in the part name) over all pieces.")),
+          tags$p(HTML("<b>Saturation</b> represents the number of pieces in the theme."))
         ),
         
         # Main panel with plot.
