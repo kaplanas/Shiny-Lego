@@ -508,7 +508,15 @@ ecology.edges.vis.df = ecology.edges.filtered %>%
 # Create a data frame of nodes.  Add a regular expression to each node that
 # matches the name of the node and related wordforms, so that we can later
 # match nodes to part names that contain the relevant keywords.
-ecology.vertices.vis.df = ecology.vertices.filtered %>%
+ecology.vertices.vis.df = bind_rows(
+  ecology.edges.filtered %>%
+    mutate(name = from) %>%
+    select(name, type),
+  ecology.edges.filtered %>%
+    mutate(name = to) %>%
+    select(name, type)
+) %>%
+  distinct() %>%
   left_join(ecology.edges.filtered, by = c("name" = "to", "type")) %>%
   mutate(depth = ifelse(is.na(depth), 0, depth)) %>%
   select(name, depth, type) %>%
