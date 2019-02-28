@@ -1,7 +1,16 @@
-shinyUI(navbarPage(
+shinyUI(fluidPage(theme = "style.css",
+                  div(style = "padding: 1px 0px; width: '100%'",
+                      titlePanel(
+                        title = "",
+                        windowTitle = "Living in the Lego World"
+                      )
+                  ),
+                  navbarPage(
   
   # Application title.
-  "Life in the Lego World",
+  title = div(span(img(src = "lego_head_small.png"),
+                   "Living in the Lego World",
+                   style = "position: relative; top: 50%; transform: translateY(-50%);")),
   
   # Demographics.
   tabPanel(
@@ -462,4 +471,4 @@ shinyUI(navbarPage(
     
   )
   
-))
+)))
