@@ -51,7 +51,8 @@ shinyServer(function(input, output) {
                     height = circle.plot.height(length(input$demographicsCircleThemePicker),
                                                 length(input$demographicsCircleGenderPicker)),
                     width = circle.plot.width(length(input$demographicsCircleThemePicker),
-                                              length(input$demographicsCircleGenderPicker)))
+                                              length(input$demographicsCircleGenderPicker))) %>%
+      withSpinner()
   })
   
   #############################################################################
@@ -732,7 +733,8 @@ shinyServer(function(input, output) {
                  pointFormat = point.format,
                  valueDecimals = 2) %>%
       hc_legend(enabled = F)
-    hc
+    hc %>%
+      withSpinner()
   })
   
   #############################################################################

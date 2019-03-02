@@ -4,6 +4,7 @@ library(tibble)
 library(ggplot2)
 library(shiny)
 library(shinyWidgets)
+library(shinycssloaders)
 library(igraph)
 library(ggraph)
 library(scales)
@@ -15,15 +16,19 @@ library(stringr)
 library(fuzzyjoin)
 library(lexicon)
 library(visNetwork)
+library(httr)
 
-theme_set(theme_bw())
+# Spinner options.
+options(spinner.type = 7,
+        spinner.color = "#F2CD37")
 
 # Download all the tables from rebrickable.com; name each one "tablename.df".
 table.names = c("themes", "colors", "part_categories", "parts", "inventories",
                 "sets", "inventory_parts", "inventory_sets",
                 "part_relationships")
-path.to.tables = "data_files/"
-# path.to.tables = "http://m.rebrickable.com/media/downloads/"
+milliseconds.in.one.day = 1000 * 60 * 60 * 24
+local.path.to.tables = "data_files/"
+web.path.to.tables = "http://m.rebrickable.com/media/downloads/"
 for(table.name in table.names) {
   assign(paste(gsub("_", "\\.", table.name), "df", sep = "."),
          read.csv(paste(path.to.tables, table.name, ".csv", sep = ""),

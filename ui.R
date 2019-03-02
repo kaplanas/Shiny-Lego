@@ -148,7 +148,8 @@ shinyUI(fluidPage(theme = "style.css",
         # Main panel with plot.
         mainPanel(div(
           style = "position:relative",
-          htmlOutput("hairTreemapUI")
+          htmlOutput("hairTreemapUI") %>%
+            withSpinner()
         ))
 
       ),
@@ -194,7 +195,8 @@ shinyUI(fluidPage(theme = "style.css",
         # Main panel with plot.
         mainPanel(div(
           style = "position:relative",
-          htmlOutput("clothesTreemapUI")
+          htmlOutput("clothesTreemapUI") %>%
+            withSpinner()
         ))
 
      ),
@@ -217,7 +219,8 @@ shinyUI(fluidPage(theme = "style.css",
        # Main panel with plot.
        mainPanel(div(
          style = "position:relative",
-         htmlOutput("accessoriesTreemapUI")
+         htmlOutput("accessoriesTreemapUI") %>%
+           withSpinner()
        ))
        
      ),
@@ -292,7 +295,8 @@ shinyUI(fluidPage(theme = "style.css",
         
         # Main panel with plot.
         mainPanel(
-          uiOutput("moodsPolarPlotUI")
+          uiOutput("moodsPolarPlotUI") %>%
+            withSpinner()
         )
         
       ),
@@ -389,7 +393,8 @@ shinyUI(fluidPage(theme = "style.css",
         
         # Main panel with dendrogram.
         mainPanel(
-          uiOutput("plantsDendrogram")
+          uiOutput("plantsDendrogram") %>%
+            withSpinner()
         )
         
       ),
@@ -410,7 +415,8 @@ shinyUI(fluidPage(theme = "style.css",
         
         # Main panel with dendrogram.
         mainPanel(
-          uiOutput("animalsDendrogram")
+          uiOutput("animalsDendrogram") %>%
+            withSpinner()
         )
         
       ),
