@@ -1,179 +1,179 @@
-id,name,rgb,is_trans
--1,[Unknown],0033B2,f
-0,Black,05131D,f
-1,Blue,0055BF,f
-2,Green,237841,f
-3,Dark Turquoise,008F9B,f
-4,Red,C91A09,f
-5,Dark Pink,C870A0,f
-6,Brown,583927,f
-7,Light Gray,9BA19D,f
-8,Dark Gray,6D6E5C,f
-9,Light Blue,B4D2E3,f
-10,Bright Green,4B9F4A,f
-11,Light Turquoise,55A5AF,f
-12,Salmon,F2705E,f
-13,Pink,FC97AC,f
-14,Yellow,F2CD37,f
-15,White,FFFFFF,f
-17,Light Green,C2DAB8,f
-18,Light Yellow,FBE696,f
-19,Tan,E4CD9E,f
-20,Light Violet,C9CAE2,f
-21,Glow In Dark Opaque,D4D5C9,f
-22,Purple,81007B,f
-23,Dark Blue-Violet,2032B0,f
-25,Orange,FE8A18,f
-26,Magenta,923978,f
-27,Lime,BBE90B,f
-28,Dark Tan,958A73,f
-29,Bright Pink,E4ADC8,f
-30,Medium Lavender,AC78BA,f
-31,Lavender,E1D5ED,f
-32,Trans-Black IR Lens,635F52,t
-33,Trans-Dark Blue,0020A0,t
-34,Trans-Green,84B68D,t
-35,Trans-Bright Green,D9E4A7,t
-36,Trans-Red,C91A09,t
-40,Trans-Black,635F52,t
-41,Trans-Light Blue,AEEFEC,t
-42,Trans-Neon Green,F8F184,t
-43,Trans-Very Lt Blue,C1DFF0,t
-45,Trans-Dark Pink,DF6695,t
-46,Trans-Yellow,F5CD2F,t
-47,Trans-Clear,FCFCFC,t
-52,Trans-Purple,A5A5CB,t
-54,Trans-Neon Yellow,DAB000,t
-57,Trans-Neon Orange,FF800D,t
-60,Chrome Antique Brass,645A4C,f
-61,Chrome Blue,6C96BF,f
-62,Chrome Green,3CB371,f
-63,Chrome Pink,AA4D8E,f
-64,Chrome Black,1B2A34,f
-68,Very Light Orange,F3CF9B,f
-69,Light Purple,CD6298,f
-70,Reddish Brown,582A12,f
-71,Light Bluish Gray,A0A5A9,f
-72,Dark Bluish Gray,6C6E68,f
-73,Medium Blue,5A93DB,f
-74,Medium Green,73DCA1,f
-75,Speckle Black-Copper,000000,f
-76,Speckle DBGray-Silver,635F61,f
-77,Light Pink,FECCCF,f
-78,Light Flesh,F6D7B3,f
-79,Milky White,FFFFFF,f
-80,Metallic Silver,A5A9B4,f
-81,Metallic Green,899B5F,f
-82,Metallic Gold,DBAC34,f
-84,Medium Dark Flesh,CC702A,f
-85,Dark Purple,3F3691,f
-86,Dark Flesh,7C503A,f
-89,Royal Blue,4C61DB,f
-92,Flesh,D09168,f
-100,Light Salmon,FEBABD,f
-110,Violet,4354A3,f
-112,Blue-Violet,6874CA,f
-114,Glitter Trans-Dark Pink,DF6695,t
-115,Medium Lime,C7D23C,f
-117,Glitter Trans-Clear,FFFFFF,t
-118,Aqua,B3D7D1,f
-120,Light Lime,D9E4A7,f
-125,Light Orange,F9BA61,f
-129,Glitter Trans-Purple,A5A5CB,t
-132,Speckle Black-Silver,000000,f
-133,Speckle Black-Gold,000000,f
-134,Copper,AE7A59,f
-135,Pearl Light Gray,9CA3A8,f
-137,Metal Blue,7988A1,f
-142,Pearl Light Gold,DCBC81,f
-143,Trans-Medium Blue,CFE2F7,t
-148,Pearl Dark Gray,575857,f
-150,Pearl Very Light Gray,ABADAC,f
-151,Very Light Bluish Gray,E6E3E0,f
-158,Yellowish Green,DFEEA5,f
-178,Flat Dark Gold,B48455,f
-179,Flat Silver,898788,f
-182,Trans-Orange,F08F1C,t
-183,Pearl White,F2F3F2,f
-191,Bright Light Orange,F8BB3D,f
-212,Bright Light Blue,9FC3E9,f
-216,Rust,B31004,f
-226,Bright Light Yellow,FFF03A,f
-230,Trans-Pink,E4ADC8,t
-232,Sky Blue,7DBFDD,f
-236,Trans-Light Purple,96709F,t
-272,Dark Blue,0A3463,f
-288,Dark Green,184632,f
-294,Glow In Dark Trans,BDC6AD,t
-297,Pearl Gold,AA7F2E,f
-308,Dark Brown,352100,f
-313,Maersk Blue,3592C3,f
-320,Dark Red,720E0F,f
-321,Dark Azure,078BC9,f
-322,Medium Azure,36AEBF,f
-323,Light Aqua,ADC3C0,f
-326,Olive Green,9B9A5A,f
-334,Chrome Gold,BBA53D,f
-335,Sand Red,D67572,f
-351,Medium Dark Pink,F785B1,f
-366,Earth Orange,FA9C1C,f
-373,Sand Purple,845E84,f
-378,Sand Green,A0BCAC,f
-379,Sand Blue,6074A1,f
-383,Chrome Silver,E0E0E0,f
-450,Fabuland Brown,B67B50,f
-462,Medium Orange,FFA70B,f
-484,Dark Orange,A95500,f
-503,Very Light Gray,E6E3DA,f
-1000,Glow in Dark White,D9D9D9,f
-1001,Medium Violet,9391E4,f
-1002,Glitter Trans-Neon Green,C0F500,t
-1003,Glitter Trans-Light Blue,68BCC5,t
-1004,Trans Flame Yellowish Orange,FCB76D,t
-1005,Trans Fire Yellow,FBE890,t
-1006,Trans Light Royal Blue,B4D4F7,t
-1007,Reddish Lilac,8E5597,f
-1008,Vintage Blue,039CBD,f
-1009,Vintage Green,1E601E,f
-1010,Vintage Red,CA1F08,f
-1011,Vintage Yellow,F3C305,f
-1012,Fabuland Orange,EF9121,f
-1013,Modulex White,F4F4F4,f
-1014,Modulex Light Bluish Gray,AfB5C7,f
-1015,Modulex Light Gray,9C9C9C,f
-1016,Modulex Charcoal Gray,595D60,f
-1017,Modulex Tile Gray,6B5A5A,f
-1018,Modulex Black,4D4C52,f
-1019,Modulex Tile Brown,330000,f
-1020,Modulex Terracotta,5C5030,f
-1021,Modulex Brown,907450,f
-1022,Modulex Buff,DEC69C,f
-1023,Modulex Red,B52C20,f
-1024,Modulex Pink Red,F45C40,f
-1025,Modulex Orange,F47B30,f
-1026,Modulex Light Orange,F7AD63,f
-1027,Modulex Light Yellow,FFE371,f
-1028,Modulex Ochre Yellow,FED557,f
-1029,Modulex Lemon,BDC618,f
-1030,Modulex Pastel Green,7DB538,f
-1031,Modulex Olive Green,7C9051,f
-1032,Modulex Aqua Green,27867E,f
-1033,Modulex Teal Blue,467083,f
-1034,Modulex Tile Blue,0057A6,f
-1035,Modulex Medium Blue,61AFFF,f
-1036,Modulex Pastel Blue,68AECE,f
-1037,Modulex Violet,BD7D85,f
-1038,Modulex Pink,F785B1,f
-1039,Modulex Clear,FFFFFF,f
-1040,Modulex Foil Dark Gray,595D60,f
-1041,Modulex Foil Light Gray,9C9C9C,f
-1042,Modulex Foil Dark Green,006400,f
-1043,Modulex Foil Light Green,7DB538,f
-1044,Modulex Foil Dark Blue,0057A6,f
-1045,Modulex Foil Light Blue,68AECE,f
-1046,Modulex Foil Violet,4B0082,f
-1047,Modulex Foil Red,8B0000,f
-1048,Modulex Foil Yellow,FED557,f
-1049,Modulex Foil Orange,F7AD63,f
-1050,Coral,FF698F,f
-9999,[No Color/Any Color],05131D,f
+"id","name","rgb","is_trans","color.name","color.hex","text.color.hex"
+-1,"[Unknown]","0033B2","f","[Unknown]","#0033B2","#FFFFFF"
+0,"Black","05131D","f","Black","#05131D","#FFFFFF"
+1,"Blue","0055BF","f","Blue","#0055BF","#FFFFFF"
+2,"Green","237841","f","Green","#237841","#FFFFFF"
+3,"Dark Turquoise","008F9B","f","Dark Turquoise","#008F9B","#FFFFFF"
+4,"Red","C91A09","f","Red","#C91A09","#FFFFFF"
+5,"Dark Pink","C870A0","f","Dark Pink","#C870A0","#FFFFFF"
+6,"Brown","583927","f","Brown","#583927","#FFFFFF"
+7,"Light Gray","9BA19D","f","Light Gray","#9BA19D","#FFFFFF"
+8,"Dark Gray","6D6E5C","f","Dark Gray","#6D6E5C","#FFFFFF"
+9,"Light Blue","B4D2E3","f","Light Blue","#B4D2E3","#FFFFFF"
+10,"Bright Green","4B9F4A","f","Bright Green","#4B9F4A","#FFFFFF"
+11,"Light Turquoise","55A5AF","f","Light Turquoise","#55A5AF","#FFFFFF"
+12,"Salmon","F2705E","f","Salmon","#F2705E","#FFFFFF"
+13,"Pink","FC97AC","f","Pink","#FC97AC","#FFFFFF"
+14,"Yellow","F2CD37","f","Yellow","#F2CD37","#000000"
+15,"White","FFFFFF","f","White","#FFFFFF","#000000"
+17,"Light Green","C2DAB8","f","Light Green","#C2DAB8","#000000"
+18,"Light Yellow","FBE696","f","Light Yellow","#FBE696","#000000"
+19,"Tan","E4CD9E","f","Tan","#E4CD9E","#000000"
+20,"Light Violet","C9CAE2","f","Light Violet","#C9CAE2","#FFFFFF"
+21,"Glow In Dark Opaque","D4D5C9","f","Glow In Dark Opaque","#D4D5C9","#000000"
+22,"Purple","81007B","f","Purple","#81007B","#FFFFFF"
+23,"Dark Blue-Violet","2032B0","f","Dark Blue-Violet","#2032B0","#FFFFFF"
+25,"Orange","FE8A18","f","Orange","#FE8A18","#FFFFFF"
+26,"Magenta","923978","f","Magenta","#923978","#FFFFFF"
+27,"Lime","BBE90B","f","Lime","#BBE90B","#000000"
+28,"Dark Tan","958A73","f","Dark Tan","#958A73","#FFFFFF"
+29,"Bright Pink","E4ADC8","f","Bright Pink","#E4ADC8","#FFFFFF"
+30,"Medium Lavender","AC78BA","f","Medium Lavender","#AC78BA","#FFFFFF"
+31,"Lavender","E1D5ED","f","Lavender","#E1D5ED","#000000"
+32,"Trans-Black IR Lens","635F52","t","Trans-Black IR Lens","#635F52","#FFFFFF"
+33,"Trans-Dark Blue","0020A0","t","Trans-Dark Blue","#0020A0","#FFFFFF"
+34,"Trans-Green","84B68D","t","Trans-Green","#84B68D","#FFFFFF"
+35,"Trans-Bright Green","D9E4A7","t","Trans-Bright Green","#D9E4A7","#000000"
+36,"Trans-Red","C91A09","t","Trans-Red","#C91A09","#FFFFFF"
+40,"Trans-Black","635F52","t","Trans-Black","#635F52","#FFFFFF"
+41,"Trans-Light Blue","AEEFEC","t","Trans-Light Blue","#AEEFEC","#000000"
+42,"Trans-Neon Green","F8F184","t","Trans-Neon Green","#F8F184","#000000"
+43,"Trans-Very Lt Blue","C1DFF0","t","Trans-Very Lt Blue","#C1DFF0","#000000"
+45,"Trans-Dark Pink","DF6695","t","Trans-Dark Pink","#DF6695","#FFFFFF"
+46,"Trans-Yellow","F5CD2F","t","Trans-Yellow","#F5CD2F","#000000"
+47,"Trans-Clear","FCFCFC","t","Trans-Clear","#FCFCFC","#000000"
+52,"Trans-Purple","A5A5CB","t","Trans-Purple","#A5A5CB","#FFFFFF"
+54,"Trans-Neon Yellow","DAB000","t","Trans-Neon Yellow","#DAB000","#FFFFFF"
+57,"Trans-Neon Orange","FF800D","t","Trans-Neon Orange","#FF800D","#FFFFFF"
+60,"Chrome Antique Brass","645A4C","f","Chrome Antique Brass","#645A4C","#FFFFFF"
+61,"Chrome Blue","6C96BF","f","Chrome Blue","#6C96BF","#FFFFFF"
+62,"Chrome Green","3CB371","f","Chrome Green","#3CB371","#FFFFFF"
+63,"Chrome Pink","AA4D8E","f","Chrome Pink","#AA4D8E","#FFFFFF"
+64,"Chrome Black","1B2A34","f","Chrome Black","#1B2A34","#FFFFFF"
+68,"Very Light Orange","F3CF9B","f","Very Light Orange","#F3CF9B","#000000"
+69,"Light Purple","CD6298","f","Light Purple","#CD6298","#FFFFFF"
+70,"Reddish Brown","582A12","f","Reddish Brown","#582A12","#FFFFFF"
+71,"Light Bluish Gray","A0A5A9","f","Light Bluish Gray","#A0A5A9","#FFFFFF"
+72,"Dark Bluish Gray","6C6E68","f","Dark Bluish Gray","#6C6E68","#FFFFFF"
+73,"Medium Blue","5A93DB","f","Medium Blue","#5A93DB","#FFFFFF"
+74,"Medium Green","73DCA1","f","Medium Green","#73DCA1","#FFFFFF"
+75,"Speckle Black-Copper","000000","f","Speckle Black-Copper","#000000","#FFFFFF"
+76,"Speckle DBGray-Silver","635F61","f","Speckle DBGray-Silver","#635F61","#FFFFFF"
+77,"Light Pink","FECCCF","f","Light Pink","#FECCCF","#000000"
+78,"Light Flesh","F6D7B3","f","Light Flesh","#F6D7B3","#000000"
+79,"Milky White","FFFFFF","f","Milky White","#FFFFFF","#000000"
+80,"Metallic Silver","A5A9B4","f","Metallic Silver","#A5A9B4","#FFFFFF"
+81,"Metallic Green","899B5F","f","Metallic Green","#899B5F","#FFFFFF"
+82,"Metallic Gold","DBAC34","f","Metallic Gold","#DBAC34","#FFFFFF"
+84,"Medium Dark Flesh","CC702A","f","Medium Dark Flesh","#CC702A","#FFFFFF"
+85,"Dark Purple","3F3691","f","Dark Purple","#3F3691","#FFFFFF"
+86,"Dark Flesh","7C503A","f","Dark Flesh","#7C503A","#FFFFFF"
+89,"Royal Blue","4C61DB","f","Royal Blue","#4C61DB","#FFFFFF"
+92,"Flesh","D09168","f","Flesh","#D09168","#FFFFFF"
+100,"Light Salmon","FEBABD","f","Light Salmon","#FEBABD","#000000"
+110,"Violet","4354A3","f","Violet","#4354A3","#FFFFFF"
+112,"Blue-Violet","6874CA","f","Blue-Violet","#6874CA","#FFFFFF"
+114,"Glitter Trans-Dark Pink","DF6695","t","Glitter Trans-Dark Pink","#DF6695","#FFFFFF"
+115,"Medium Lime","C7D23C","f","Medium Lime","#C7D23C","#FFFFFF"
+117,"Glitter Trans-Clear","FFFFFF","t","Glitter Trans-Clear","#FFFFFF","#000000"
+118,"Aqua","B3D7D1","f","Aqua","#B3D7D1","#FFFFFF"
+120,"Light Lime","D9E4A7","f","Light Lime","#D9E4A7","#000000"
+125,"Light Orange","F9BA61","f","Light Orange","#F9BA61","#FFFFFF"
+129,"Glitter Trans-Purple","A5A5CB","t","Glitter Trans-Purple","#A5A5CB","#FFFFFF"
+132,"Speckle Black-Silver","000000","f","Speckle Black-Silver","#000000","#FFFFFF"
+133,"Speckle Black-Gold","000000","f","Speckle Black-Gold","#000000","#FFFFFF"
+134,"Copper","AE7A59","f","Copper","#AE7A59","#FFFFFF"
+135,"Pearl Light Gray","9CA3A8","f","Pearl Light Gray","#9CA3A8","#FFFFFF"
+137,"Metal Blue","7988A1","f","Metal Blue","#7988A1","#FFFFFF"
+142,"Pearl Light Gold","DCBC81","f","Pearl Light Gold","#DCBC81","#FFFFFF"
+143,"Trans-Medium Blue","CFE2F7","t","Trans-Medium Blue","#CFE2F7","#000000"
+148,"Pearl Dark Gray","575857","f","Pearl Dark Gray","#575857","#FFFFFF"
+150,"Pearl Very Light Gray","ABADAC","f","Pearl Very Light Gray","#ABADAC","#FFFFFF"
+151,"Very Light Bluish Gray","E6E3E0","f","Very Light Bluish Gray","#E6E3E0","#000000"
+158,"Yellowish Green","DFEEA5","f","Yellowish Green","#DFEEA5","#000000"
+178,"Flat Dark Gold","B48455","f","Flat Dark Gold","#B48455","#FFFFFF"
+179,"Flat Silver","898788","f","Flat Silver","#898788","#FFFFFF"
+182,"Trans-Orange","F08F1C","t","Trans-Orange","#F08F1C","#FFFFFF"
+183,"Pearl White","F2F3F2","f","Pearl White","#F2F3F2","#000000"
+191,"Bright Light Orange","F8BB3D","f","Bright Light Orange","#F8BB3D","#FFFFFF"
+212,"Bright Light Blue","9FC3E9","f","Bright Light Blue","#9FC3E9","#FFFFFF"
+216,"Rust","B31004","f","Rust","#B31004","#FFFFFF"
+226,"Bright Light Yellow","FFF03A","f","Bright Light Yellow","#FFF03A","#000000"
+230,"Trans-Pink","E4ADC8","t","Trans-Pink","#E4ADC8","#FFFFFF"
+232,"Sky Blue","7DBFDD","f","Sky Blue","#7DBFDD","#FFFFFF"
+236,"Trans-Light Purple","96709F","t","Trans-Light Purple","#96709F","#FFFFFF"
+272,"Dark Blue","0A3463","f","Dark Blue","#0A3463","#FFFFFF"
+288,"Dark Green","184632","f","Dark Green","#184632","#FFFFFF"
+294,"Glow In Dark Trans","BDC6AD","t","Glow In Dark Trans","#BDC6AD","#FFFFFF"
+297,"Pearl Gold","AA7F2E","f","Pearl Gold","#AA7F2E","#FFFFFF"
+308,"Dark Brown","352100","f","Dark Brown","#352100","#FFFFFF"
+313,"Maersk Blue","3592C3","f","Maersk Blue","#3592C3","#FFFFFF"
+320,"Dark Red","720E0F","f","Dark Red","#720E0F","#FFFFFF"
+321,"Dark Azure","078BC9","f","Dark Azure","#078BC9","#FFFFFF"
+322,"Medium Azure","36AEBF","f","Medium Azure","#36AEBF","#FFFFFF"
+323,"Light Aqua","ADC3C0","f","Light Aqua","#ADC3C0","#FFFFFF"
+326,"Olive Green","9B9A5A","f","Olive Green","#9B9A5A","#FFFFFF"
+334,"Chrome Gold","BBA53D","f","Chrome Gold","#BBA53D","#FFFFFF"
+335,"Sand Red","D67572","f","Sand Red","#D67572","#FFFFFF"
+351,"Medium Dark Pink","F785B1","f","Medium Dark Pink","#F785B1","#FFFFFF"
+366,"Earth Orange","FA9C1C","f","Earth Orange","#FA9C1C","#FFFFFF"
+373,"Sand Purple","845E84","f","Sand Purple","#845E84","#FFFFFF"
+378,"Sand Green","A0BCAC","f","Sand Green","#A0BCAC","#FFFFFF"
+379,"Sand Blue","6074A1","f","Sand Blue","#6074A1","#FFFFFF"
+383,"Chrome Silver","E0E0E0","f","Chrome Silver","#E0E0E0","#000000"
+450,"Fabuland Brown","B67B50","f","Fabuland Brown","#B67B50","#FFFFFF"
+462,"Medium Orange","FFA70B","f","Medium Orange","#FFA70B","#FFFFFF"
+484,"Dark Orange","A95500","f","Dark Orange","#A95500","#FFFFFF"
+503,"Very Light Gray","E6E3DA","f","Very Light Gray","#E6E3DA","#000000"
+1000,"Glow in Dark White","D9D9D9","f","Glow in Dark White","#D9D9D9","#000000"
+1001,"Medium Violet","9391E4","f","Medium Violet","#9391E4","#FFFFFF"
+1002,"Glitter Trans-Neon Green","C0F500","t","Glitter Trans-Neon Green","#C0F500","#000000"
+1003,"Glitter Trans-Light Blue","68BCC5","t","Glitter Trans-Light Blue","#68BCC5","#FFFFFF"
+1004,"Trans Flame Yellowish Orange","FCB76D","t","Trans Flame Yellowish Orange","#FCB76D","#FFFFFF"
+1005,"Trans Fire Yellow","FBE890","t","Trans Fire Yellow","#FBE890","#000000"
+1006,"Trans Light Royal Blue","B4D4F7","t","Trans Light Royal Blue","#B4D4F7","#FFFFFF"
+1007,"Reddish Lilac","8E5597","f","Reddish Lilac","#8E5597","#FFFFFF"
+1008,"Vintage Blue","039CBD","f","Vintage Blue","#039CBD","#FFFFFF"
+1009,"Vintage Green","1E601E","f","Vintage Green","#1E601E","#FFFFFF"
+1010,"Vintage Red","CA1F08","f","Vintage Red","#CA1F08","#FFFFFF"
+1011,"Vintage Yellow","F3C305","f","Vintage Yellow","#F3C305","#000000"
+1012,"Fabuland Orange","EF9121","f","Fabuland Orange","#EF9121","#FFFFFF"
+1013,"Modulex White","F4F4F4","f","Modulex White","#F4F4F4","#000000"
+1014,"Modulex Light Bluish Gray","AfB5C7","f","Modulex Light Bluish Gray","#AfB5C7","#FFFFFF"
+1015,"Modulex Light Gray","9C9C9C","f","Modulex Light Gray","#9C9C9C","#FFFFFF"
+1016,"Modulex Charcoal Gray","595D60","f","Modulex Charcoal Gray","#595D60","#FFFFFF"
+1017,"Modulex Tile Gray","6B5A5A","f","Modulex Tile Gray","#6B5A5A","#FFFFFF"
+1018,"Modulex Black","4D4C52","f","Modulex Black","#4D4C52","#FFFFFF"
+1019,"Modulex Tile Brown","330000","f","Modulex Tile Brown","#330000","#FFFFFF"
+1020,"Modulex Terracotta","5C5030","f","Modulex Terracotta","#5C5030","#FFFFFF"
+1021,"Modulex Brown","907450","f","Modulex Brown","#907450","#FFFFFF"
+1022,"Modulex Buff","DEC69C","f","Modulex Buff","#DEC69C","#FFFFFF"
+1023,"Modulex Red","B52C20","f","Modulex Red","#B52C20","#FFFFFF"
+1024,"Modulex Pink Red","F45C40","f","Modulex Pink Red","#F45C40","#FFFFFF"
+1025,"Modulex Orange","F47B30","f","Modulex Orange","#F47B30","#FFFFFF"
+1026,"Modulex Light Orange","F7AD63","f","Modulex Light Orange","#F7AD63","#FFFFFF"
+1027,"Modulex Light Yellow","FFE371","f","Modulex Light Yellow","#FFE371","#000000"
+1028,"Modulex Ochre Yellow","FED557","f","Modulex Ochre Yellow","#FED557","#000000"
+1029,"Modulex Lemon","BDC618","f","Modulex Lemon","#BDC618","#FFFFFF"
+1030,"Modulex Pastel Green","7DB538","f","Modulex Pastel Green","#7DB538","#FFFFFF"
+1031,"Modulex Olive Green","7C9051","f","Modulex Olive Green","#7C9051","#FFFFFF"
+1032,"Modulex Aqua Green","27867E","f","Modulex Aqua Green","#27867E","#FFFFFF"
+1033,"Modulex Teal Blue","467083","f","Modulex Teal Blue","#467083","#FFFFFF"
+1034,"Modulex Tile Blue","0057A6","f","Modulex Tile Blue","#0057A6","#FFFFFF"
+1035,"Modulex Medium Blue","61AFFF","f","Modulex Medium Blue","#61AFFF","#FFFFFF"
+1036,"Modulex Pastel Blue","68AECE","f","Modulex Pastel Blue","#68AECE","#FFFFFF"
+1037,"Modulex Violet","BD7D85","f","Modulex Violet","#BD7D85","#FFFFFF"
+1038,"Modulex Pink","F785B1","f","Modulex Pink","#F785B1","#FFFFFF"
+1039,"Modulex Clear","FFFFFF","f","Modulex Clear","#FFFFFF","#000000"
+1040,"Modulex Foil Dark Gray","595D60","f","Modulex Foil Dark Gray","#595D60","#FFFFFF"
+1041,"Modulex Foil Light Gray","9C9C9C","f","Modulex Foil Light Gray","#9C9C9C","#FFFFFF"
+1042,"Modulex Foil Dark Green","006400","f","Modulex Foil Dark Green","#006400","#FFFFFF"
+1043,"Modulex Foil Light Green","7DB538","f","Modulex Foil Light Green","#7DB538","#FFFFFF"
+1044,"Modulex Foil Dark Blue","0057A6","f","Modulex Foil Dark Blue","#0057A6","#FFFFFF"
+1045,"Modulex Foil Light Blue","68AECE","f","Modulex Foil Light Blue","#68AECE","#FFFFFF"
+1046,"Modulex Foil Violet","4B0082","f","Modulex Foil Violet","#4B0082","#FFFFFF"
+1047,"Modulex Foil Red","8B0000","f","Modulex Foil Red","#8B0000","#FFFFFF"
+1048,"Modulex Foil Yellow","FED557","f","Modulex Foil Yellow","#FED557","#000000"
+1049,"Modulex Foil Orange","F7AD63","f","Modulex Foil Orange","#F7AD63","#FFFFFF"
+1050,"Coral","FF698F","f","Coral","#FF698F","#FFFFFF"
+9999,"[No Color/Any Color]","05131D","f","[No Color/Any Color]","#05131D","#FFFFFF"

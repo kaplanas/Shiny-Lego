@@ -1,15 +1,23 @@
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
+  
+  #############################################################################
+  #############################################################################
+  ## Data                                                                    ##
+  #############################################################################
+  #############################################################################
+  
+  source("munge_data.R", local = T)
   
   #############################################################################
   #############################################################################
   ## Demographics                                                            ##
   #############################################################################
   #############################################################################
-  
+
   #############################################################################
   # Gender and ethnicity                                                      #
   #############################################################################
-  
+
   # Create the demographics circle graph.
   demographics.circle.graph = reactive({
     # Store the themes and genders chosen by the user in variables with
@@ -41,7 +49,7 @@ shinyServer(function(input, output) {
                  facet.by.theme = length(selected.themes) > 0,
                  facet.by.other = length(selected.genders) > 0)
   })
-  
+
   # The actual demographics graph.
   output$demographicsCirclePlot = renderHighchart({
     demographics.circle.graph()
@@ -51,14 +59,13 @@ shinyServer(function(input, output) {
                     height = circle.plot.height(length(input$demographicsCircleThemePicker),
                                                 length(input$demographicsCircleGenderPicker)),
                     width = circle.plot.width(length(input$demographicsCircleThemePicker),
-                                              length(input$demographicsCircleGenderPicker))) %>%
-      withSpinner()
+                                              length(input$demographicsCircleGenderPicker)))
   })
-  
+
   #############################################################################
   # Ethnic diversity and gender parity                                        #
   #############################################################################
-  
+
   output$demographicsDiversity = renderHighchart({
     # Get one row per theme, with the relevant columns.
     temp.heads.df = theme.counts.df %>%
@@ -120,11 +127,11 @@ shinyServer(function(input, output) {
     }
     hc
   })
-  
+
   #############################################################################
   # Find sets with a specific ethnicity or gender                             #
   #############################################################################
-  
+
   output$demographicsSets = renderDataTable({
     # Store the themes and genders chosen by the user in variables with
     # shorter names.
@@ -160,11 +167,11 @@ shinyServer(function(input, output) {
   ## Fashion                                                                 ##
   #############################################################################
   #############################################################################
-  
+
   #############################################################################
   # Hair                                                                      #
   #############################################################################
-  
+
   # Create the hair treemap.
   hair.treemap = reactive({
     # Store the themes chosen by the user in a variable.
@@ -219,16 +226,16 @@ shinyServer(function(input, output) {
     # Create the plot.
     treemap.graph(temp.hair.df, level.settings)
   })
-  
+
   # The actual hair graph.
   output$hairTreemapUI = renderUI({
     hair.treemap()
   })
-  
+
   #############################################################################
   # Clothing                                                                  #
   #############################################################################
-  
+
   # Create the clothing treemap.
   clothes.treemap = reactive({
     # Store the themes and types chosen by the user in variables.
@@ -305,16 +312,16 @@ shinyServer(function(input, output) {
     # Create the plot.
     treemap.graph(temp.clothes.df, level.settings)
   })
-  
+
   # The actual clothing graph.
   output$clothesTreemapUI = renderUI({
     clothes.treemap()
   })
-  
+
   #############################################################################
   # Accessories                                                               #
   #############################################################################
-  
+
   # Create the accessories treemap.
   accessories.treemap = reactive({
     # Store the themes chosen by the user in variables.
@@ -349,16 +356,16 @@ shinyServer(function(input, output) {
     # Create the plot.
     treemap.graph(temp.accessories.df, level.settings)
   })
-  
+
   # The actual accessory graph.
   output$accessoriesTreemapUI = renderUI({
     accessories.treemap()
   })
-  
+
   #############################################################################
   # Find sets with a specific fashion item                                    #
   #############################################################################
-  
+
   output$fashionSets = renderDataTable({
     # Store the themes, colors, and items chosen by the user in variables with
     # shorter names.
@@ -415,11 +422,11 @@ shinyServer(function(input, output) {
   ## Moods                                                                   ##
   #############################################################################
   #############################################################################
-  
+
   #############################################################################
   # Mood counts                                                               #
   #############################################################################
-  
+
   output$moodsPolarPlotUI = renderUI({
     temp.moods.df = moods.df %>%
       mutate(facet.name = "",
@@ -489,11 +496,11 @@ shinyServer(function(input, output) {
     ) %>%
       hw_grid(ncol = num.cols)
   })
-  
+
   #############################################################################
   # Mood percents                                                             #
   #############################################################################
-  
+
   output$moodsBarPlot = renderHighchart({
     # Get one row per theme, with the relevant columns.
     temp.moods.df = moods.df %>%
@@ -555,11 +562,11 @@ shinyServer(function(input, output) {
       hc_legend(enabled = F) %>%
       hc_yAxis(max = 100)
   })
-  
+
   #############################################################################
   # Find sets with a specific mood                                            #
   #############################################################################
-  
+
   output$moodsSets = renderDataTable({
     # Store the themes, genders, and moods chosen by the user in variables with
     # shorter names.
@@ -604,11 +611,11 @@ shinyServer(function(input, output) {
   ## Ecology                                                                 ##
   #############################################################################
   #############################################################################
-  
+
   #############################################################################
   # Plants                                                                    #
   #############################################################################
-  
+
   # Get the dimensions of the facets needed for the plant dendrograms, and
   # create the facets.
   plant.facet.info = reactive({
@@ -618,7 +625,7 @@ shinyServer(function(input, output) {
     dendrogram.facet.uis(plant.facet.info(),
                          "plant")
   })
-  
+
   # Plot the actual dendrograms.
   observe({
     plant.facets = dendrogram.facets(ecology.vertices.vis.df %>%
@@ -635,11 +642,11 @@ shinyServer(function(input, output) {
       })
     }
   })
-  
+
   #############################################################################
   # Animals                                                                   #
   #############################################################################
-  
+
   # Get the dimensions of the facets needed for the animal dendrograms, and
   # create the facets.
   animal.facet.info = reactive({
@@ -649,7 +656,7 @@ shinyServer(function(input, output) {
     dendrogram.facet.uis(animal.facet.info(),
                          "animal")
   })
-  
+
   # Plot the actual dendrograms.
   observe({
     animal.facets = dendrogram.facets(ecology.vertices.vis.df %>%
@@ -666,11 +673,11 @@ shinyServer(function(input, output) {
       })
     }
   })
-  
+
   #############################################################################
   # Species diversity                                                         #
   #############################################################################
-  
+
   output$ecologyDiversity = renderHighchart({
     # Get one row per theme, with the relevant columns.
     temp.ecology.df = theme.counts.df %>%
@@ -733,14 +740,13 @@ shinyServer(function(input, output) {
                  pointFormat = point.format,
                  valueDecimals = 2) %>%
       hc_legend(enabled = F)
-    hc %>%
-      withSpinner()
+    hc
   })
-  
+
   #############################################################################
   # Find sets with a specific plant or animal                                 #
   #############################################################################
-  
+
   output$ecologySets = renderDataTable({
     # Store the themes and colors chosen by the user in variables with
     # shorter names.
